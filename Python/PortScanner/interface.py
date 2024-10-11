@@ -53,7 +53,7 @@ class PortScannerInterFace(QMainWindow):
         """
         mainMenu = self.menuBar()
         mainMenu.setStyleSheet("color: red; background-color: #FFFFFF")
-        fileMenu = mainMenu.addMenu("&File")
+        programmMenu = mainMenu.addMenu("&Programm")
 
         newAction = QAction("&New scan", self)
         newAction.setShortcut("Ctrl+N")
@@ -70,9 +70,9 @@ class PortScannerInterFace(QMainWindow):
         exitAction.setStatusTip("Exit from application")
         exitAction.triggered.connect(self.exitApp)
 
-        fileMenu.addAction(newAction)
-        fileMenu.addAction(saveAction)
-        fileMenu.addAction(exitAction)
+        programmMenu.addAction(newAction)
+        programmMenu.addAction(saveAction)
+        programmMenu.addAction(exitAction)
 
         helpMenu = mainMenu.addMenu("&Help")
 
@@ -197,8 +197,10 @@ class PortScannerInterFace(QMainWindow):
         self.timerBox.setSingleStep(1)
 
         tcpScan = QRadioButton("TCP scanning")
+        tcpScan.clicked.connect(self.tcp_scan)
 
         udpScan = QRadioButton("UDP scanning")
+        udpScan.clicked.connect(self.udp_scan)
 
         optionsVLayout = QGridLayout()
         optionsVLayout.addWidget(timerLabel, 0, 0, 1, 1)
@@ -216,6 +218,18 @@ class PortScannerInterFace(QMainWindow):
         optionsLayout.addWidget(optionsFrame, 0, 0, 1, 2)
 
         return optionsLayout
+
+    def tcp_scan(self):
+        """
+            Функция, подключащая TCP сканирование
+        """
+        self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text())
+
+    def udp_scan(self):
+        """
+            Функция, подключащая UDP сканирование
+        """
+        self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text())
 
     def createButtons(self):
         """
@@ -290,6 +304,8 @@ class PortScannerInterFace(QMainWindow):
             Функция вывода информации на главный экран.
             Сделать для разных целей разные таблицы с результатами
         """
+        print(self.results)
+
         self.outputText.clear()
         self.outputText.append(f"<h4><b>IP address:</b> {self.targetEdit.text()}</h4>")
         self.outputText.append(f"<h4><b>Ports:</b> {self.targetPortEdit.text()}</h4>")
@@ -297,7 +313,7 @@ class PortScannerInterFace(QMainWindow):
         self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now()}</b></h4> \n")
 
         headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
-        self.results = scanner.PortScanner(self.targetEdit.text(), self.targetPortEdit.text())
+    
         for key, value in self.results.items():
             self.outputText.append(f"\n\n\t<h4><b>Results of scanning {key}</b></h4> \n")
             self.cursor = QTextCursor()
