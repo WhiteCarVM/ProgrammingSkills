@@ -304,32 +304,33 @@ class PortScannerInterFace(QMainWindow):
             Функция вывода информации на главный экран.
             Сделать для разных целей разные таблицы с результатами
         """
-        print(self.results)
-
         self.outputText.clear()
         self.outputText.append(f"<h4><b>IP address:</b> {self.targetEdit.text()}</h4>")
         self.outputText.append(f"<h4><b>Ports:</b> {self.targetPortEdit.text()}</h4>")
-        self.outputText.append(f"<h4><b>Time between requests:</b> {self.timerBox.value()}</h4>")
-        self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now()}</b></h4> \n")
+        self.outputText.append(f"<h4><b>Time between requests:</b> {self.timerBox.value()} seconds</h4>")
+        self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</b></h4> \n")
 
         headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
     
-        for key, value in self.results.items():
-            self.outputText.append(f"\n\n\t<h4><b>Results of scanning {key}</b></h4> \n")
-            self.cursor = QTextCursor()
-            self.cursor = self.outputText.textCursor()
-            self.cursor.insertTable(len(value)+1, len(headers))
+        try:
+            for key, value in self.results.items():
+                self.outputText.append(f"\n\n\t<h4><b>Results of scanning {key}</b></h4> \n")
+                self.cursor = QTextCursor()
+                self.cursor = self.outputText.textCursor()
+                self.cursor.insertTable(len(value)+1, len(headers))
 
             
-            for header in headers:
-                self.cursor.insertText(header)
-                self.cursor.movePosition(QTextCursor.NextCell)
-
-            for i in range(len(value)):
-                self.cursor.insertText(str(value[i][0]))
-                self.cursor.movePosition(QTextCursor.NextCell)
-                self.cursor.insertText(value[i][1])
-                self.cursor.movePosition(QTextCursor.NextCell)
-                self.cursor.insertText(value[i][2])
-                self.cursor.movePosition(QTextCursor.NextCell)
-                self.cursor.movePosition(QTextCursor.NextCell)
+                for header in headers:
+                    self.cursor.insertText(header)
+                    self.cursor.movePosition(QTextCursor.NextCell)
+ 
+                for i in range(len(value)):
+                    self.cursor.insertText(str(value[i][0]))
+                    self.cursor.movePosition(QTextCursor.NextCell)
+                    self.cursor.insertText(value[i][1])
+                    self.cursor.movePosition(QTextCursor.NextCell)
+                    self.cursor.insertText(value[i][2])
+                    self.cursor.movePosition(QTextCursor.NextCell)
+                    self.cursor.movePosition(QTextCursor.NextCell)
+        except:
+            self.outputText.append(f"\n\t<h4><b style='color: red'>Please choose the type of scanning</b></h4>\n")

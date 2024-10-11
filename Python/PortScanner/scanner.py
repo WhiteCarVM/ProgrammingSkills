@@ -57,8 +57,9 @@ def UDPscan(target_ips, target_ports):
                     Функция сканирования одного порта и вывода результатов сканирования.
                 """
                 if "-" in ports:
-                    ports = ports.strip().split("-")
-                    for port in range(int(ports[0]), int(ports[1])+1):
+                    ports = map(int, ports.split("-"))
+                    print(ports)
+                    for port in range(ports[0], ports[1]+1):
                         try:
                             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                             sock.connect((target, port))
