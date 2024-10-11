@@ -48,7 +48,7 @@ class PortScannerInterFace(QMainWindow):
 
     def createMenus(self):
         """
-            Создание меню (функциональность практически отсутствует). ДОПИСАТЬ!!!
+            Создание меню. ДОПИСАТЬ ЕЩЕ ПАРУ ДЕЙСВИЙ!!!
         """
         mainMenu = self.menuBar()
         mainMenu.setStyleSheet("color: red; background-color: #FFFFFF")
@@ -85,7 +85,7 @@ class PortScannerInterFace(QMainWindow):
         aboutMenu = mainMenu.addMenu("&About")
 
         aboutAction = QAction("About developer", self)
-        aboutAction.setShortcut("Ctrl+A")
+        aboutAction.setShortcut("Ctrl+I")
         aboutAction.setStatusTip("Read about developer this tool")
         aboutAction.triggered.connect(self.aboutActionFunction)
 
@@ -104,9 +104,9 @@ class PortScannerInterFace(QMainWindow):
             Функция для объяснения прииложения 
         """
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
         msg.setWindowTitle("Manual")
-
+        msg.setText("The information about tool and manual you can read <a href='https://github.com/WhiteCarVM/ProgrammingSkills/tree/main/Python/PortScanner'>here</a>")
+        msg.setTextFormat(Qt.RichText)
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
@@ -114,7 +114,12 @@ class PortScannerInterFace(QMainWindow):
         """
             Функция для представления разработчика
         """
-        pass
+        message_box = QMessageBox()
+        message_box.setWindowTitle("About developer")
+        message_box.setText("The information about developer you can read <a href='https://github.com/WhiteCarVM/ProgrammingSkills/tree/main/Python/PortScanner'>here</a>.")
+        message_box.setTextFormat(Qt.RichText)
+        message_box.setStandardButtons(QMessageBox.Ok)
+        message_box.exec_()
 
     def initTargetAndStart(self):
         """
