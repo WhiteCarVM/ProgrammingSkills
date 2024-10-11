@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from collections import defaultdict
 
 import sys
 import socket
@@ -186,7 +187,7 @@ class PortScannerInterFace(QMainWindow):
         timerLabel.setStyleSheet(f"color: {self.color}")
 
         self.timerBox = QSpinBox()
-        self.timerBox.setRange(5, 60)
+        self.timerBox.setRange(1, 60)
         self.timerBox.setSingleStep(1)
 
         tcpScan = QRadioButton("TCP scanning")
@@ -241,15 +242,24 @@ class PortScannerInterFace(QMainWindow):
             Функция сохранения в файл. ИЗМЕНИТЬ ФОРМАТ ЗАПИСИ!!!
         """
         filename, _ =QFileDialog.getSaveFileName(self, "Save file", "./", "Text file(*.txt);;All files(*.*)")
-        
+
         if filename:
             with open(filename, "w") as file:
                 file.write("\tInformation about scanning:\n")
                 file.write(f"1. IP address: {self.targetEdit.text()}\n")
                 file.write(f"2. Ports: {self.targetPortEdit.text()}\n")
-                file.write(f"3. Timer: {self.timerBox.value()}\n")
+                file.write(f"3. Time between requests: {self.timerBox.value()}\n")
                 file.write(f"4. Scanning starts at {datetime.datetime.now()}")
-                file.write("Port\tStatus\tService\tVersion")
+                file.write("\n\n\tResults of scanning:")
+                file.write("\n---------------------------------------------------------------------\n")
+                file.write("|\tPort\t|\tStatus\t    |\tService\t    |\tVersion\t    |")
+                file.write("\n---------------------------------------------------------------------\n")
+                
+                for result in self.results:
+                    file.write("|               |                   |               |               |\n")
+                    file.write(f"|\t{result[0]}\t|\t{result[1]}\t    |\t{result[2]}\t    |\tNone\t    |\n")
+                    file.write("|               |                   |               |               |\n")
+                    file.write("---------------------------------------------------------------------\n")
                 
                 
     def exitApp(self):
@@ -274,24 +284,24 @@ class PortScannerInterFace(QMainWindow):
         self.outputText.clear()
         self.outputText.append(f"<h4><b>IP address:</b> {self.targetEdit.text()}</h4>")
         self.outputText.append(f"<h4><b>Ports:</b> {self.targetPortEdit.text()}</h4>")
-        self.outputText.append(f"<h4><b>Timer:</b> {self.timerBox.value()}</h4>")
+        self.outputText.append(f"<h4><b>Time between requests:</b> {self.timerBox.value()}</h4>")
         self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now()}</b></h4> \n")
 
         headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
-        results = scanner.PortScanner(self.targetEdit.text(), self.targetPortEdit.text())
+        self.results = scanner.PortScanner(self.targetEdit.text(), self.targetPortEdit.text())
         self.cursor = QTextCursor()
         self.cursor = self.outputText.textCursor()
-        self.cursor.insertTable(len(results)+1, len(headers))
+        self.cursor.insertTable(len(self.results)+1, len(headers))
 
         for header in headers:
             self.cursor.insertText(header)
             self.cursor.movePosition(QTextCursor.NextCell)
 
-        for i in range(len(results)):
-            self.cursor.insertText(str(results[i][0]))
+        for i in range(len(self.results)):
+            self.cursor.insertText(str(self.results[i][0]))
             self.cursor.movePosition(QTextCursor.NextCell)
-            self.cursor.insertText(results[i][1])
+            self.cursor.insertText(self.results[i][1])
             self.cursor.movePosition(QTextCursor.NextCell)
-            self.cursor.insertText(results[i][2])
+            self.cursor.insertText(self.results[i][2])
             self.cursor.movePosition(QTextCursor.NextCell)
             self.cursor.movePosition(QTextCursor.NextCell)
