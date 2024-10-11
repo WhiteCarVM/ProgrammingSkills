@@ -8,22 +8,24 @@ def PortScanner(target_ips, target_ports):
         Функиця реализации сканера портов. Я бы хотел добавить больше функций. ДОПИСАТЬ!!!
         Если порт фильтруется или закрыт, а также при сканировании нескольких портов, программа экстренно завершает работу. ОБРАБОТАТЬ ИСКЛЮЧЕНИЯ!!!
     """
-    results = []
+    target_results = dict()
     
     for target in target_ips.split(","):
         try:
+            results = []
             ScanPort(target, target_ports, results)
+            target_results[target] = results
         except:
             pass
         
-    return results
+    return target_results
 
 def ScanPort(target:str, ports:str, results):
     """
         Функция сканирования одного порта и вывода результатов сканирования.
     """
     if "-" in ports:
-        ports = ports.split("-")
+        ports = ports.strip().split("-")
         for port in range(int(ports[0]), int(ports[1])+1):
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,8 +33,8 @@ def ScanPort(target:str, ports:str, results):
                 service = socket.getservbyport(port)
                 results.append([port, "open", service])
                 sock.close()
-            except:
-                pass
+            except Exception as ex:
+                print(f"Exception: {ex}")
     else:
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -145,19 +145,25 @@ class PortScannerInterFace(QMainWindow):
         self.targetEdit.setPlaceholderText("Example: 8.8.8.8")
         self.targetEdit.setMaximumWidth(200)
 
-        portRange = "([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-6][0-9][0-9][0-9][0-9])"
-        portRegExp = QRegExp("^" + portRange + "-" + portRange + "$")
-        portValidator = QRegExpValidator(portRegExp, self)
-        
+        try:
+            portRange = "([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-6][0-9][0-9][0-9][0-9])"
+            portRegExp = QRegExp("^" + portRange + "-" + portRange + "$")
+            portValidator = QRegExpValidator(portRegExp, self)
+        except Exception as ex:
+            print(f"Error: {ex}")
+
         targetPortLabel = QLabel("Ports:")
         targetPortLabel.setFont(QFont("Times", 15))
         targetPortLabel.setStyleSheet(f"color: {self.color};")
 
-        self.targetPortEdit = QLineEdit()
-        self.targetPortEdit.setStyleSheet("background-color: white; color: black;")
-        self.targetPortEdit.setValidator(portValidator)
-        self.targetPortEdit.setPlaceholderText("Example: 1-1024 or 22")
-        self.targetPortEdit.setMaximumWidth(200)
+        try:
+            self.targetPortEdit = QLineEdit()
+            self.targetPortEdit.setStyleSheet("background-color: white; color: black;")
+            self.targetPortEdit.setValidator(portValidator)
+            self.targetPortEdit.setPlaceholderText("Example: 1-1024 or 22")
+            self.targetPortEdit.setMaximumWidth(200)
+        except Exception as ex:
+            print(f"Error: {ex}")
 
         targetVLayout = QGridLayout()
         targetVLayout.addWidget(targetLabel, 0, 0)
@@ -240,6 +246,7 @@ class PortScannerInterFace(QMainWindow):
     def saveToFile(self):
         """
             Функция сохранения в файл. ИЗМЕНИТЬ ФОРМАТ ЗАПИСИ!!!
+            Сделать для разных целей разные таблицы с результатами
         """
         filename, _ =QFileDialog.getSaveFileName(self, "Save file", "./", "Text file(*.txt);;All files(*.*)")
 
@@ -250,16 +257,17 @@ class PortScannerInterFace(QMainWindow):
                 file.write(f"2. Ports: {self.targetPortEdit.text()}\n")
                 file.write(f"3. Time between requests: {self.timerBox.value()}\n")
                 file.write(f"4. Scanning starts at {datetime.datetime.now()}")
-                file.write("\n\n\tResults of scanning:")
-                file.write("\n---------------------------------------------------------------------\n")
-                file.write("|\tPort\t|\tStatus\t    |\tService\t    |\tVersion\t    |")
-                file.write("\n---------------------------------------------------------------------\n")
+                for key, value in self.results.items():
+                    file.write(f"\n\n\tResults of scanning {key}:")
+                    file.write("\n---------------------------------------------------------------------\n")
+                    file.write("|\tPort\t|\tStatus\t    |\tService\t    |\tVersion\t    |")
+                    file.write("\n---------------------------------------------------------------------\n")
                 
-                for result in self.results:
-                    file.write("|               |                   |               |               |\n")
-                    file.write(f"|\t{result[0]}\t|\t{result[1]}\t    |\t{result[2]}\t    |\tNone\t    |\n")
-                    file.write("|               |                   |               |               |\n")
-                    file.write("---------------------------------------------------------------------\n")
+                    for result in value:
+                        file.write("|               |                   |               |               |\n")
+                        file.write(f"|\t{result[0]}\t|\t{result[1]}\t    |\t{result[2]}\t    |\tNone\t    |\n")
+                        file.write("|               |                   |               |               |\n")
+                        file.write("---------------------------------------------------------------------\n")
                 
                 
     def exitApp(self):
@@ -280,6 +288,7 @@ class PortScannerInterFace(QMainWindow):
     def scanningResults(self):
         """
             Функция вывода информации на главный экран.
+            Сделать для разных целей разные таблицы с результатами
         """
         self.outputText.clear()
         self.outputText.append(f"<h4><b>IP address:</b> {self.targetEdit.text()}</h4>")
@@ -289,19 +298,22 @@ class PortScannerInterFace(QMainWindow):
 
         headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
         self.results = scanner.PortScanner(self.targetEdit.text(), self.targetPortEdit.text())
-        self.cursor = QTextCursor()
-        self.cursor = self.outputText.textCursor()
-        self.cursor.insertTable(len(self.results)+1, len(headers))
+        for key, value in self.results.items():
+            self.outputText.append(f"\n\n\t<h4><b>Results of scanning {key}</b></h4> \n")
+            self.cursor = QTextCursor()
+            self.cursor = self.outputText.textCursor()
+            self.cursor.insertTable(len(value)+1, len(headers))
 
-        for header in headers:
-            self.cursor.insertText(header)
-            self.cursor.movePosition(QTextCursor.NextCell)
+            
+            for header in headers:
+                self.cursor.insertText(header)
+                self.cursor.movePosition(QTextCursor.NextCell)
 
-        for i in range(len(self.results)):
-            self.cursor.insertText(str(self.results[i][0]))
-            self.cursor.movePosition(QTextCursor.NextCell)
-            self.cursor.insertText(self.results[i][1])
-            self.cursor.movePosition(QTextCursor.NextCell)
-            self.cursor.insertText(self.results[i][2])
-            self.cursor.movePosition(QTextCursor.NextCell)
-            self.cursor.movePosition(QTextCursor.NextCell)
+            for i in range(len(value)):
+                self.cursor.insertText(str(value[i][0]))
+                self.cursor.movePosition(QTextCursor.NextCell)
+                self.cursor.insertText(value[i][1])
+                self.cursor.movePosition(QTextCursor.NextCell)
+                self.cursor.insertText(value[i][2])
+                self.cursor.movePosition(QTextCursor.NextCell)
+                self.cursor.movePosition(QTextCursor.NextCell)
