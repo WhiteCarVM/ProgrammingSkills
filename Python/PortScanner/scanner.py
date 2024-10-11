@@ -3,81 +3,59 @@ import time
 import socket
 import datetime
 
-def TCPscan(target_ips, target_ports):
-    """
-        Функция, реализующая TCP сканнирование
-    """
+def parse_ports(port_range):
+    try:
+        if "-" in port_range:
+            start, end = map(int, port_range.split("-"))
+            return list(range(start, end+1))
+        else:
+            return [int(port_range)]
+    except Exception as ex:
+        print(f"Exception: {ex}")
+
+def TCPscan(target_ips, target_ports, timer):
     target_results = dict()
     
-    for target in target_ips.split(","):
-        try:
-            results = []
-            def scan_port(target:str, ports:str, results):
-                """
-                    Функция сканирования одного порта и вывода результатов сканирования.
-                """
-                if "-" in ports:
-                    ports = ports.strip().split("-")
-                    for port in range(int(ports[0]), int(ports[1])+1):
-                        try:
-                            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            sock.connect((target, port))
-                            service = socket.getservbyport(port)
-                            results.append([f"{port}\\tcp", "open", service])
-                            sock.close()
-                        except Exception as ex:
-                            print(f"Exception: {ex}")
-                else:
+    try:
+        for target in target_ips.split(","):
+            try:
+                results = []
+                ports = parse_ports(target_ports)
+                for port in ports:
                     try:
                         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        sock.connect((target, int(ports)))
-                        service = socket.getservbyport(int(ports))
-                        results.append([f"{ports}\\tcp", "open", service])
+                        sock.connect((target, port))
+                        service = socket.getservbyport(port)
+                        results.append([f"{port}\\tcp", "open", service])
                         sock.close()
-                    except:
-                        pass
-            scan_port(target, target_ports, results)
-            target_results[target] = results
-        except:
-            pass
+                        time.sleep(timer)
+                    except Exception as ex:
+                        print(f"Exception1: {ex}")
+                target_results[target] = results
+            except Exception as ex:
+                print(f"Exception2: {ex}")
+    except Exception as ex:
+        print(f"Exveption3: {ex}")
     
     return target_results
 
-def UDPscan(target_ips, target_ports):
-    """
-        Функция, реализующая UDP сканнирование
-    """
+def UDPscan(target_ips, target_ports, timer):
     target_results = dict()
     
     for target in target_ips.split(","):
         try:
             results = []
-            def scan_port(target:str, ports:str, results):
-                """
-                    Функция сканирования одного порта и вывода результатов сканирования.
-                """
-                if "-" in ports:
-                    ports = map(int, ports.split("-"))
-                    print(ports)
-                    for port in range(ports[0], ports[1]+1):
-                        try:
-                            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                            sock.connect((target, port))
-                            service = socket.getservbyport(port)
-                            results.append([f"{port}\\udp", "open", service])
-                            sock.close()
-                        except Exception as ex:
-                            print(f"Exception: {ex}")
-                else:
-                    try:
-                        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                        sock.connect((target, int(ports)))
-                        service = socket.getservbyport(int(ports))
-                        results.append([f"{ports}\\udp", "open", service])
-                        sock.close()
-                    except:
-                        pass
-            scan_port(target, target_ports, results)
+            ports = parse_ports(target_ports)
+            for port in ports:
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    sock.connect((target, port))
+                    service = socket.getservbyport(port)
+                    results.append([f"{port}\\udp", "open", service])
+                    sock.close()
+                    time.sleep(timer)
+                except Exception as ex:
+                    print(f"Exception: {ex}")
             target_results[target] = results
         except:
             pass

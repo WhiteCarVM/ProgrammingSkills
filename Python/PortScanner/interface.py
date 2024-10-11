@@ -223,13 +223,13 @@ class PortScannerInterFace(QMainWindow):
         """
             Функция, подключащая TCP сканирование
         """
-        self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text())
+        self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text(), int(self.timerBox.value()))
 
     def udp_scan(self):
         """
             Функция, подключащая UDP сканирование
         """
-        self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text())
+        self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text(), int(self.timerBox.value()))
 
     def createButtons(self):
         """
