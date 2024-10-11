@@ -1,5 +1,0 @@
-	Information about scanning:
-1. IP address: 77.88.44.242,172.217.16.206
-2. Ports: 21-25
-3. Time between requests: 1
-4. Scanning starts at 2024-10-11 23:00:18.720028
