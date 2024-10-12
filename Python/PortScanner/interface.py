@@ -22,10 +22,11 @@ class PortScannerInterFace(QMainWindow):
         self.color = "#FFFF33"
 
         self.initUI()
-        
+
+# Следующий фрагмент кода отвечает за интерфейс
     def initUI(self):
         '''
-            Создание главного окна со всем меню, 
+            Создание главного окна со всем меню
         '''
         self.setWindowTitle("PortScanner")
         self.setGeometry(360, 170, 1200, 800)
@@ -90,7 +91,96 @@ class PortScannerInterFace(QMainWindow):
         aboutAction.setStatusTip("Read about developer this tool")
         aboutAction.triggered.connect(self.aboutActionFunction)
 
-        aboutMenu.addAction(aboutAction)
+        aboutMenu.addAction(aboutAction)   
+
+    def initOptions(self):
+        """ 
+            Функция выбора некоторых опций. Задается TCP или UDP сканирование, но не работает. ДОПИСАТЬ ПАРУ ФУНКЦИЙ И ПЕРЕПИСАТЬ СУЩЕСТВУЮЩУЮ!!! 
+        """
+        optionsLayout = QGridLayout()
+
+        tcpScan = QRadioButton("TCP scanning")
+        tcpScan.clicked.connect(self.tcp_scan)
+
+        udpScan = QRadioButton("UDP scanning")
+        udpScan.clicked.connect(self.udp_scan)
+
+        synScan = QRadioButton("SYN scanning")
+        synScan.clicked.connect(self.syn_scan)
+
+        xmasScan = QRadioButton("XMaS scanning")
+        xmasScan.clicked.connect(self.xmas_scan)
+
+        optionsVLayout = QGridLayout()
+        optionsVLayout.addWidget(tcpScan, 0, 0, 1, 1)
+        optionsVLayout.addWidget(udpScan, 0, 1, 1, 1)
+        optionsVLayout.addWidget(synScan, 2, 0, 1, 1)
+        optionsVLayout.addWidget(xmasScan, 2, 1, 1, 1)
+
+        optionsFrame = QFrame()
+        optionsFrame.setFrameShape(QFrame.Box)
+        optionsFrame.setFrameShadow(QFrame.Raised)
+        optionsFrame.setLineWidth(3)
+        optionsFrame.setStyleSheet(f"color: {self.color}; border: 2px solid {self.color}; border-radius: 5px;")
+        optionsFrame.setLayout(optionsVLayout)
+
+        optionsLayout.addWidget(optionsFrame, 0, 0, 1, 2)
+
+        return optionsLayout
+
+    def createButtons(self):
+        """
+            Создание главных кнопок. Все три кнопки работают. ДОПИСАТЬ ПАРУ КНОПОК!!!
+        """
+        saveButton = QPushButton("Save to file")
+        saveButton.setFont(QFont("Times", 15))
+        saveButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color}")
+        saveButton.clicked.connect(self.saveToFile)
+
+        scanningButton = QPushButton("Start scanning")
+        scanningButton.setFont(QFont("Times", 15))
+        scanningButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color};")
+        scanningButton.clicked.connect(self.scanningResults)
+        scanningButton.setShortcut("Ctrl+B")    
+
+        exitButton = QPushButton("Exit")
+        exitButton.setFont(QFont("Times", 15))
+        exitButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color}")
+        exitButton.clicked.connect(self.exitApp)
+
+        self.outputText = QTextEdit()
+        self.outputText.setReadOnly(True)
+        self.outputText.setStyleSheet("background-color:white; color: black;")
+
+        return saveButton, scanningButton, exitButton, self.outputText
+
+#Следующий фрагмент кода отвечает за типы сканирования
+
+    def tcp_scan(self):
+        """
+            Функция, подключащая TCP сканирование
+        """
+        if self.is_valid_ports(self.targetPortEdit.text()) and self.targetPortEdit.text() != "":
+            self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text())
+        else:
+            self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
+
+    def udp_scan(self):
+        """
+            Функция, подключащая UDP сканирование
+        """
+        if self.is_valid_ports(self.targetPortEdit.text()):
+            self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text()) 
+        else:
+            self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
+
+    def syn_scan(self):
+        self.outputText.append("<h4><b style='color: red;'>This function developes</b></h4>")
+    
+    def xmas_scan(self):
+        self.outputText.append("<h4><b style='color: red;'>This function developes</b></h4>")
+
+#Следующий фрагмент кода отвечает за функции меню
 
     def newActionFunction(self):
         """
@@ -122,145 +212,9 @@ class PortScannerInterFace(QMainWindow):
         message_box.setStandardButtons(QMessageBox.Ok)
         message_box.exec_()
 
-    def initTargetAndStart(self):
-        """
-            Фильтрация пользовательского ввода. Инициализация цели и портов для сканирования.
-        """
-        targetLayout = QGridLayout()
-        targetLayout.setSpacing(20)
-
-        ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"
-        ipRegExp = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "(?:," + ipRange + "\\." + ipRange + "\\." 
-        + ipRange + "\\." + ipRange + "|\\-" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "|/[0-9]?[0-9])?$")
-        ipValidator = QRegExpValidator(ipRegExp, self)
-        
-        targetLabel = QLabel("IP address:")
-        targetLabel.setFont(QFont("Times", 15))
-        targetLabel.setStyleSheet(f"color: {self.color};")
-        targetLabel.setAlignment(Qt.AlignLeft)
-        
-        self.targetEdit = QLineEdit()
-        self.targetEdit.setStyleSheet(f"background-color: white; color: black;")
-        self.targetEdit.setValidator(ipValidator)
-        self.targetEdit.setPlaceholderText("Example: 8.8.8.8")
-        self.targetEdit.setMaximumWidth(200)
-
-        try:
-            portRange = "([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-6][0-9][0-9][0-9][0-9])"
-            portRegExp = QRegExp("^" + portRange + "-" + portRange + "$")
-            portValidator = QRegExpValidator(portRegExp, self)
-        except Exception as ex:
-            print(f"Error: {ex}")
-
-        targetPortLabel = QLabel("Ports:")
-        targetPortLabel.setFont(QFont("Times", 15))
-        targetPortLabel.setStyleSheet(f"color: {self.color};")
-
-        try:
-            self.targetPortEdit = QLineEdit()
-            self.targetPortEdit.setStyleSheet("background-color: white; color: black;")
-            self.targetPortEdit.setValidator(portValidator)
-            self.targetPortEdit.setPlaceholderText("Example: 1-1024 or 22")
-            self.targetPortEdit.setMaximumWidth(200)
-        except Exception as ex:
-            print(f"Error: {ex}")
-
-        targetVLayout = QGridLayout()
-        targetVLayout.addWidget(targetLabel, 0, 0)
-        targetVLayout.addWidget(self.targetEdit, 0, 1, 1, 2)
-        targetVLayout.addWidget(targetPortLabel, 1, 0)
-        targetVLayout.addWidget(self.targetPortEdit, 1, 1, 1, 2)
-
-        targetFrame = QFrame()
-        targetFrame.setFrameShape(QFrame.Box)
-        targetFrame.setFrameShadow(QFrame.Raised)
-        targetFrame.setLineWidth(3)
-        targetFrame.setStyleSheet(f"color: {self.color}; border: 2px solid {self.color}; border-radius: 5px;")
-        targetFrame.setLayout(targetVLayout)
-
-        targetLayout.addWidget(targetFrame, 0, 0, 1, 2)
-
-        return targetLayout
-
-    def initOptions(self):
-        """ 
-            Функция выбора некоторых опций. Задается TCP или UDP сканирование, но не работает. ДОПИСАТЬ ПАРУ ФУНКЦИЙ И ПЕРЕПИСАТЬ СУЩЕСТВУЮЩУЮ!!! 
-        """
-        optionsLayout = QGridLayout()
-
-        timerLabel = QLabel("Timer")
-        timerLabel.setFont(QFont("Times", 15))
-        timerLabel.setStyleSheet(f"color: {self.color}")
-
-        self.timerBox = QSpinBox()
-        self.timerBox.setRange(1, 60)
-        self.timerBox.setSingleStep(1)
-
-        tcpScan = QRadioButton("TCP scanning")
-        tcpScan.clicked.connect(self.tcp_scan)
-
-        udpScan = QRadioButton("UDP scanning")
-        udpScan.clicked.connect(self.udp_scan)
-
-        optionsVLayout = QGridLayout()
-        optionsVLayout.addWidget(timerLabel, 0, 0, 1, 1)
-        optionsVLayout.addWidget(self.timerBox, 0, 1, 1, 1)
-        optionsVLayout.addWidget(tcpScan, 2, 0, 1, 1)
-        optionsVLayout.addWidget(udpScan, 2, 1, 1, 1)
-
-        optionsFrame = QFrame()
-        optionsFrame.setFrameShape(QFrame.Box)
-        optionsFrame.setFrameShadow(QFrame.Raised)
-        optionsFrame.setLineWidth(3)
-        optionsFrame.setStyleSheet(f"color: {self.color}; border: 2px solid {self.color}; border-radius: 5px;")
-        optionsFrame.setLayout(optionsVLayout)
-
-        optionsLayout.addWidget(optionsFrame, 0, 0, 1, 2)
-
-        return optionsLayout
-
-    def tcp_scan(self):
-        """
-            Функция, подключащая TCP сканирование
-        """
-        self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text(), int(self.timerBox.value()))
-
-    def udp_scan(self):
-        """
-            Функция, подключащая UDP сканирование
-        """
-        self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text(), int(self.timerBox.value()))
-
-    def createButtons(self):
-        """
-            Создание главных кнопок. Все три кнопки работают. ДОПИСАТЬ ПАРУ КНОПОК!!!
-        """
-        saveButton = QPushButton("Save to file")
-        saveButton.setFont(QFont("Times", 15))
-        saveButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color}")
-        saveButton.clicked.connect(self.saveToFile)
-
-        scanningButton = QPushButton("Start scanning")
-        scanningButton.setFont(QFont("Times", 15))
-        scanningButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color};")
-        scanningButton.clicked.connect(self.scanningResults)
-        scanningButton.setShortcut("Ctrl+B")    
-
-        exitButton = QPushButton("Exit")
-        exitButton.setFont(QFont("Times", 15))
-        exitButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color}")
-        exitButton.clicked.connect(self.exitApp)
-
-        self.outputText = QTextEdit()
-        self.outputText.setReadOnly(True)
-        self.outputText.setStyleSheet("background-color:white; color: black;")
-
-        return saveButton, scanningButton, exitButton, self.outputText
-
     def saveToFile(self):
         """
             Функция сохранения в файл. ИЗМЕНИТЬ ФОРМАТ ЗАПИСИ!!!
-            Сделать для разных целей разные таблицы с результатами
         """
         filename, _ =QFileDialog.getSaveFileName(self, "Save file", "./", "Text file(*.txt);;All files(*.*)")
 
@@ -269,7 +223,6 @@ class PortScannerInterFace(QMainWindow):
                 file.write("\tInformation about scanning:\n")
                 file.write(f"1. IP address: {self.targetEdit.text()}\n")
                 file.write(f"2. Ports: {self.targetPortEdit.text()}\n")
-                file.write(f"3. Time between requests: {self.timerBox.value()}\n")
                 file.write(f"4. Scanning starts at {datetime.datetime.now()}")
                 for key, value in self.results.items():
                     file.write(f"\n\n\tResults of scanning {key}:")
@@ -302,12 +255,10 @@ class PortScannerInterFace(QMainWindow):
     def scanningResults(self):
         """
             Функция вывода информации на главный экран.
-            Сделать для разных целей разные таблицы с результатами
         """
         self.outputText.clear()
         self.outputText.append(f"<h4><b>IP address:</b> {self.targetEdit.text()}</h4>")
         self.outputText.append(f"<h4><b>Ports:</b> {self.targetPortEdit.text()}</h4>")
-        self.outputText.append(f"<h4><b>Time between requests:</b> {self.timerBox.value()} seconds</h4>")
         self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</b></h4> \n")
 
         headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
@@ -334,3 +285,86 @@ class PortScannerInterFace(QMainWindow):
                     self.cursor.movePosition(QTextCursor.NextCell)
         except:
             self.outputText.append(f"\n\t<h4><b style='color: red'>Please choose the type of scanning</b></h4>\n")
+
+#Следующий код отвечает за фильтрацию результатов 
+
+    def initTargetAndStart(self):
+        """
+            Фильтрация пользовательского ввода. Инициализация цели и портов для сканирования.
+        """
+        targetLayout = QGridLayout()
+        targetLayout.setSpacing(20)
+
+        ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"
+        ipRegExp = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "(?:," + ipRange + "\\." + ipRange + "\\." 
+        + ipRange + "\\." + ipRange + "|\\-" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "|/[0-9]?[0-9])?$")
+        ipValidator = QRegExpValidator(ipRegExp, self)
+        
+        targetLabel = QLabel("IP address:")
+        targetLabel.setFont(QFont("Times", 15))
+        targetLabel.setStyleSheet(f"color: {self.color};")
+        targetLabel.setAlignment(Qt.AlignLeft)
+        
+        self.targetEdit = QLineEdit()
+        self.targetEdit.setStyleSheet(f"background-color: white; color: black;")
+        self.targetEdit.setValidator(ipValidator)
+        self.targetEdit.setPlaceholderText("Example: 8.8.8.8")
+        self.targetEdit.setMaximumWidth(200)
+
+        '''
+        try:
+            portRange = "([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-6][0-9][0-9][0-9][0-9])"
+            portRegExp = QRegExp("^" + portRange + "-" + portRange + "$")
+            portValidator = QRegExpValidator(portRegExp, self)
+        except Exception as ex:
+            print(f"Error: {ex}")
+        '''
+
+        targetPortLabel = QLabel("Ports:")
+        targetPortLabel.setFont(QFont("Times", 15))
+        targetPortLabel.setStyleSheet(f"color: {self.color};")
+
+        try:
+            self.targetPortEdit = QLineEdit()
+            self.targetPortEdit.setStyleSheet("background-color: white; color: black;")
+            #self.targetPortEdit.setValidator(portValidator)
+            self.targetPortEdit.setPlaceholderText("Example: 1-1024 or 22")
+            self.targetPortEdit.setMaximumWidth(200)
+        except Exception as ex:
+            print(f"Error: {ex}")
+
+        targetVLayout = QGridLayout()
+        targetVLayout.addWidget(targetLabel, 0, 0)
+        targetVLayout.addWidget(self.targetEdit, 0, 1, 1, 2)
+        targetVLayout.addWidget(targetPortLabel, 1, 0)
+        targetVLayout.addWidget(self.targetPortEdit, 1, 1, 1, 2)
+
+        targetFrame = QFrame()
+        targetFrame.setFrameShape(QFrame.Box)
+        targetFrame.setFrameShadow(QFrame.Raised)
+        targetFrame.setLineWidth(3)
+        targetFrame.setStyleSheet(f"color: {self.color}; border: 2px solid {self.color}; border-radius: 5px;")
+        targetFrame.setLayout(targetVLayout)
+
+        targetLayout.addWidget(targetFrame, 0, 0, 1, 2)
+
+        return targetLayout
+
+    def is_valid_ports(self, ports):
+        """
+            Функция проверки правильности введенных портов
+        """
+        if "-" in ports:
+            ports = ports.split("-")
+            for port in ports:
+                if not port.isdigit() or not (1 <= int(port) <= 65535):
+                    return False
+            return True
+        elif "," in ports:
+            ports = ports.split(",")
+            for port in ports:
+                if not port.isdigit() or not (1 <= int(port) <= 65535):
+                    return False
+            return True
+        else:
+            return (ports.isdigit() and 1 <= int(ports) <= 65535)

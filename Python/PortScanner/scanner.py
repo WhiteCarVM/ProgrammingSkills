@@ -13,7 +13,7 @@ def parse_ports(port_range):
     except Exception as ex:
         print(f"Exception: {ex}")
 
-def TCPscan(target_ips, target_ports, timer):
+def TCPscan(target_ips, target_ports):
     target_results = dict()
     
     try:
@@ -28,7 +28,6 @@ def TCPscan(target_ips, target_ports, timer):
                         service = socket.getservbyport(port)
                         results.append([f"{port}\\tcp", "open", service])
                         sock.close()
-                        time.sleep(timer)
                     except Exception as ex:
                         print(f"Exception1: {ex}")
                 target_results[target] = results
@@ -39,7 +38,7 @@ def TCPscan(target_ips, target_ports, timer):
     
     return target_results
 
-def UDPscan(target_ips, target_ports, timer):
+def UDPscan(target_ips, target_ports):
     target_results = dict()
     
     for target in target_ips.split(","):
@@ -53,7 +52,6 @@ def UDPscan(target_ips, target_ports, timer):
                     service = socket.getservbyport(port)
                     results.append([f"{port}\\udp", "open", service])
                     sock.close()
-                    time.sleep(timer)
                 except Exception as ex:
                     print(f"Exception: {ex}")
             target_results[target] = results
