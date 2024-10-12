@@ -1,10 +1,9 @@
 from PyQt5.QtWidgets import QApplication
-
 import sys
 
 import interface
 
-if __name__ == "__main__":
+def main():
     """
         Функция запуска приложения.
     """
@@ -12,3 +11,6 @@ if __name__ == "__main__":
     scanner = interface.PortScannerInterFace()
     scanner.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()

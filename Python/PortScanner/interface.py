@@ -20,6 +20,7 @@ class PortScannerInterFace(QMainWindow):
         
         self.background = "708090"
         self.color = "#FFFF33"
+        self.results = {}
 
         self.initUI()
 
@@ -160,19 +161,27 @@ class PortScannerInterFace(QMainWindow):
         """
             Функция, подключащая TCP сканирование
         """
-        if self.is_valid_ports(self.targetPortEdit.text()) and self.targetPortEdit.text() != "":
-            self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text())
-        else:
-            self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
+        try:
+            if self.is_valid_ports(self.targetPortEdit.text()) and self.targetPortEdit.text() != "":
+                self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text())
+            else:
+                self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
+        except Exception as ex:
+            logging.error(f"Error during TCP scanning: {ex}")
+            self.outputText.append(f"<h4><b style='color: red;'>Error during TCP scan: {ex}</b></h4> \n")
 
     def udp_scan(self):
         """
             Функция, подключащая UDP сканирование
         """
-        if self.is_valid_ports(self.targetPortEdit.text()):
-            self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text()) 
-        else:
-            self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
+        try:
+            if self.is_valid_ports(self.targetPortEdit.text()):
+                self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text()) 
+            else:
+                self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
+        except Exception as ex:
+            logging.error(f"Error during UDP scanning: {ex}")
+            self.outputText.append(f"<h4><b style='color: red;'>Error during UDP scan: {ex}</b></h4> \n")
 
     def syn_scan(self):
         self.outputText.append("<h4><b style='color: red;'>This function developes</b></h4>")
@@ -189,6 +198,7 @@ class PortScannerInterFace(QMainWindow):
         self.targetEdit.clear()
         self.targetPortEdit.clear()
         self.outputText.clear()
+        self.results.clear()
 
     def helpActionFunction(self):
         """
@@ -216,26 +226,29 @@ class PortScannerInterFace(QMainWindow):
         """
             Функция сохранения в файл. ИЗМЕНИТЬ ФОРМАТ ЗАПИСИ!!!
         """
-        filename, _ =QFileDialog.getSaveFileName(self, "Save file", "./", "Text file(*.txt);;All files(*.*)")
+        try:
+            filename, _ =QFileDialog.getSaveFileName(self, "Save file", "./", "Text file(*.txt);;All files(*.*)")
 
-        if filename:
-            with open(filename, "w") as file:
-                file.write("\tInformation about scanning:\n")
-                file.write(f"1. IP address: {self.targetEdit.text()}\n")
-                file.write(f"2. Ports: {self.targetPortEdit.text()}\n")
-                file.write(f"4. Scanning starts at {datetime.datetime.now()}")
-                for key, value in self.results.items():
-                    file.write(f"\n\n\tResults of scanning {key}:")
-                    file.write("\n---------------------------------------------------------------------\n")
-                    file.write("|\tPort\t|\tStatus\t    |\tService\t    |\tVersion\t    |")
-                    file.write("\n---------------------------------------------------------------------\n")
+            if filename:
+                with open(filename, "w") as file:
+                    file.write("\tInformation about scanning:\n")
+                    file.write(f"1. IP address: {self.targetEdit.text()}\n")
+                    file.write(f"2. Ports: {self.targetPortEdit.text()}\n")
+                    file.write(f"4. Scanning starts at {datetime.datetime.now()}")
+                    for key, value in self.results.items():
+                        file.write(f"\n\n\tResults of scanning {key}:")
+                        file.write("\n---------------------------------------------------------------------\n")
+                        file.write("|\tPort\t|\tStatus\t    |\tService\t    |\tVersion\t    |")
+                        file.write("\n---------------------------------------------------------------------\n")
                 
-                    for result in value:
-                        file.write("|               |                   |               |               |\n")
-                        file.write(f"|\t{result[0]}\t|\t{result[1]}\t    |\t{result[2]}\t    |\tNone\t    |\n")
-                        file.write("|               |                   |               |               |\n")
-                        file.write("---------------------------------------------------------------------\n")
-                
+                        for result in value:
+                            file.write("|               |                   |               |               |\n")
+                            file.write(f"|\t{result[0]}\t|\t{result[1]}\t    |\t{result[2]}\t    |\tNone\t    |\n")
+                            file.write("|               |                   |               |               |\n")
+                            file.write("---------------------------------------------------------------------\n")
+        except Exception as ex:
+            logging.error(f"Error saving to file: {ex}")
+            self.outputText.append(f"<h4><b style='color: red;'>Error saving to file: {ex}</b></h4> \n")
                 
     def exitApp(self):
         """
@@ -256,35 +269,43 @@ class PortScannerInterFace(QMainWindow):
         """
             Функция вывода информации на главный экран.
         """
-        self.outputText.clear()
-        self.outputText.append(f"<h4><b>IP address:</b> {self.targetEdit.text()}</h4>")
-        self.outputText.append(f"<h4><b>Ports:</b> {self.targetPortEdit.text()}</h4>")
-        self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</b></h4> \n")
-
-        headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
-    
         try:
-            for key, value in self.results.items():
-                self.outputText.append(f"\n\n\t<h4><b>Results of scanning {key}</b></h4> \n")
-                self.cursor = QTextCursor()
-                self.cursor = self.outputText.textCursor()
-                self.cursor.insertTable(len(value)+1, len(headers))
+            self.outputText.clear()
+            self.outputText.append(f"<h4><b>IP address:</b> {self.targetEdit.text()}</h4>")
+            self.outputText.append(f"<h4><b>Ports:</b> {self.targetPortEdit.text()}</h4>")
+            self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</b></h4> \n")
+
+            headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
+
+            if not self.results:
+                self.outputText.append(f"\n\t<h4><b style='color: red'>No results to display</b></h4>\n")
+                return
+
+            try:
+                for key, value in self.results.items():
+                    self.outputText.append(f"\n\n\t<h4><b>Results of scanning {key}</b></h4> \n")
+                    self.cursor = QTextCursor()
+                    self.cursor = self.outputText.textCursor()
+                    self.cursor.insertTable(len(value)+1, len(headers))
 
             
-                for header in headers:
-                    self.cursor.insertText(header)
-                    self.cursor.movePosition(QTextCursor.NextCell)
- 
-                for i in range(len(value)):
-                    self.cursor.insertText(str(value[i][0]))
-                    self.cursor.movePosition(QTextCursor.NextCell)
-                    self.cursor.insertText(value[i][1])
-                    self.cursor.movePosition(QTextCursor.NextCell)
-                    self.cursor.insertText(value[i][2])
-                    self.cursor.movePosition(QTextCursor.NextCell)
-                    self.cursor.movePosition(QTextCursor.NextCell)
-        except:
-            self.outputText.append(f"\n\t<h4><b style='color: red'>Please choose the type of scanning</b></h4>\n")
+                    for header in headers:
+                        self.cursor.insertText(header)
+                        self.cursor.movePosition(QTextCursor.NextCell)
+
+                    for i in range(len(value)):
+                        self.cursor.insertText(str(value[i][0]))
+                        self.cursor.movePosition(QTextCursor.NextCell)
+                        self.cursor.insertText(value[i][1])
+                        self.cursor.movePosition(QTextCursor.NextCell)
+                        self.cursor.insertText(value[i][2])
+                        self.cursor.movePosition(QTextCursor.NextCell)
+                        self.cursor.movePosition(QTextCursor.NextCell)
+            except:
+                self.outputText.append(f"\n\t<h4><b style='color: red'>Please choose the type of scanning</b></h4>\n")
+        except Exception as ex:
+            logging.error(f"Error displaying scanning results: {ex}")
+            self.outputText.append(f"<h4><b style='color: red;'>Error displaying scaning results: {ex}</b></h4> \n")
 
 #Следующий код отвечает за фильтрацию результатов 
 
