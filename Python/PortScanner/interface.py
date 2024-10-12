@@ -4,8 +4,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from collections import defaultdict
 
+import re
 import sys
 import socket
+import logging
 import datetime
 
 import scanner
@@ -96,7 +98,7 @@ class PortScannerInterFace(QMainWindow):
 
     def initOptions(self):
         """ 
-            Функция выбора некоторых опций. Задается TCP или UDP сканирование, но не работает. ДОПИСАТЬ ПАРУ ФУНКЦИЙ И ПЕРЕПИСАТЬ СУЩЕСТВУЮЩУЮ!!! 
+            Функция выбора некоторых опций. Задается TCP или UDP сканирование. ДОПИСАТЬ ПАРУ ФУНКЦИЙ!!! 
         """
         optionsLayout = QGridLayout()
 
@@ -131,7 +133,7 @@ class PortScannerInterFace(QMainWindow):
 
     def createButtons(self):
         """
-            Создание главных кнопок. Все три кнопки работают. ДОПИСАТЬ ПАРУ КНОПОК!!!
+            Создание главных кнопок. Все три кнопки работают!!!
         """
         saveButton = QPushButton("Save to file")
         saveButton.setFont(QFont("Times", 15))
@@ -162,7 +164,8 @@ class PortScannerInterFace(QMainWindow):
             Функция, подключащая TCP сканирование
         """
         try:
-            if self.is_valid_ports(self.targetPortEdit.text()) and self.targetPortEdit.text() != "":
+            if (self.is_valid_ports(self.targetPortEdit.text()) and self.targetPortEdit.text() != "") and \
+                (self.is_valid_ip(self.targetEdit.text()) and self.targetEdit.text() != ""):
                 self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text())
             else:
                 self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
@@ -175,7 +178,8 @@ class PortScannerInterFace(QMainWindow):
             Функция, подключащая UDP сканирование
         """
         try:
-            if self.is_valid_ports(self.targetPortEdit.text()):
+            if (self.is_valid_ports(self.targetPortEdit.text()) and self.targetPortEdit.text() != "") and \
+                (self.is_valid_ip(self.targetEdit.text()) and self.targetEdit.text() != ""):
                 self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text()) 
             else:
                 self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
@@ -315,11 +319,6 @@ class PortScannerInterFace(QMainWindow):
         """
         targetLayout = QGridLayout()
         targetLayout.setSpacing(20)
-
-        ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"
-        ipRegExp = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "(?:," + ipRange + "\\." + ipRange + "\\." 
-        + ipRange + "\\." + ipRange + "|\\-" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "|/[0-9]?[0-9])?$")
-        ipValidator = QRegExpValidator(ipRegExp, self)
         
         targetLabel = QLabel("IP address:")
         targetLabel.setFont(QFont("Times", 15))
@@ -328,18 +327,8 @@ class PortScannerInterFace(QMainWindow):
         
         self.targetEdit = QLineEdit()
         self.targetEdit.setStyleSheet(f"background-color: white; color: black;")
-        self.targetEdit.setValidator(ipValidator)
         self.targetEdit.setPlaceholderText("Example: 8.8.8.8")
         self.targetEdit.setMaximumWidth(200)
-
-        '''
-        try:
-            portRange = "([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|[1-6][0-9][0-9][0-9][0-9])"
-            portRegExp = QRegExp("^" + portRange + "-" + portRange + "$")
-            portValidator = QRegExpValidator(portRegExp, self)
-        except Exception as ex:
-            print(f"Error: {ex}")
-        '''
 
         targetPortLabel = QLabel("Ports:")
         targetPortLabel.setFont(QFont("Times", 15))
@@ -348,7 +337,6 @@ class PortScannerInterFace(QMainWindow):
         try:
             self.targetPortEdit = QLineEdit()
             self.targetPortEdit.setStyleSheet("background-color: white; color: black;")
-            #self.targetPortEdit.setValidator(portValidator)
             self.targetPortEdit.setPlaceholderText("Example: 1-1024 or 22")
             self.targetPortEdit.setMaximumWidth(200)
         except Exception as ex:
@@ -373,19 +361,56 @@ class PortScannerInterFace(QMainWindow):
 
     def is_valid_ports(self, ports):
         """
-            Функция проверки правильности введенных портов
+            Функция проверки правильности введенных портов.
         """
         if "-" in ports:
-            ports = ports.split("-")
-            for port in ports:
-                if not port.isdigit() or not (1 <= int(port) <= 65535):
-                    return False
-            return True
+            start_port, end_port = ports.split("-")
+            if start_port.isdigit() and end_port.isdigit():
+                start_port, end_port = int(start_port), int(end_port)
+                return 1 <= start_port <= 65535 and 1 <= end_port <= 65535 and start_port <= end_port
         elif "," in ports:
             ports = ports.split(",")
             for port in ports:
-                if not port.isdigit() or not (1 <= int(port) <= 65535):
+                if not (port.isdigit() and 1 <= int(port) <= 65535):
                     return False
             return True
         else:
-            return (ports.isdigit() and 1 <= int(ports) <= 65535)
+            return ports.isdigit() and 1 <= int(ports) <= 65535
+        return False
+
+    def is_valid_ip(self, ip):
+        """
+            Функция проверки правильности введенного IP адреса или CIDR.
+
+            Если в строку вводить не IP или порт, выводить сообщение об ошибке
+        """
+        ip_pattern = re.compile(
+            r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
+        )
+        cidr_pattern = re.compile(
+            r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$'
+        )
+        range_pattern = re.compile(
+            r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}-(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
+        )
+    
+        list_pattern = re.compile(
+            r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?:,(?:[0-9]{1,3}\.){3}[0-9]{1,3})*$'
+        )
+
+        if ip_pattern.match(ip):
+            return all(0 <= int(part) <= 255 for part in ip.split('.'))
+        elif cidr_pattern.match(ip):
+            address, subnet = ip.split('/')
+            if not all(0 <= int(part) <= 255 for part in address.split('.')):
+                return False
+            return 0 <= int(subnet) <= 32
+        elif range_pattern.match(ip):
+            start_ip, end_ip = ip.split('-')
+            return all(0 <= int(part) <= 255 for part in start_ip.split('.')) and \
+               all(0 <= int(part) <= 255 for part in end_ip.split('.'))
+        elif list_pattern.match(ip):
+            ip_addresses = ip.split(',')
+            return all(self.is_valid_ip(addr) for addr in ip_addresses)
+    
+        return False
