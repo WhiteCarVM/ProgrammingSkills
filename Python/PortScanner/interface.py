@@ -137,18 +137,18 @@ class PortScannerInterFace(QMainWindow):
         """
         saveButton = QPushButton("Save to file")
         saveButton.setFont(QFont("Times", 15))
-        saveButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color}")
+        saveButton.setStyleSheet(f"background-color: #776699; color: {self.color}")
         saveButton.clicked.connect(self.saveToFile)
 
         scanningButton = QPushButton("Start scanning")
         scanningButton.setFont(QFont("Times", 15))
-        scanningButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color};")
+        scanningButton.setStyleSheet(f"background-color: #776699; color: {self.color};")
         scanningButton.clicked.connect(self.scanningResults)
         scanningButton.setShortcut("Ctrl+B")    
 
         exitButton = QPushButton("Exit")
         exitButton.setFont(QFont("Times", 15))
-        exitButton.setStyleSheet(f"background-color: #FF00FF; color: {self.color}")
+        exitButton.setStyleSheet(f"background-color: #776699; color: {self.color}")
         exitButton.clicked.connect(self.exitApp)
 
         self.outputText = QTextEdit()
@@ -168,7 +168,7 @@ class PortScannerInterFace(QMainWindow):
                 (self.is_valid_ip(self.targetEdit.text()) and self.targetEdit.text() != ""):
                 self.results = scanner.TCPscan(self.targetEdit.text(), self.targetPortEdit.text())
             else:
-                self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
+                pass
         except Exception as ex:
             logging.error(f"Error during TCP scanning: {ex}")
             self.outputText.append(f"<h4><b style='color: red;'>Error during TCP scan: {ex}</b></h4> \n")
@@ -182,7 +182,7 @@ class PortScannerInterFace(QMainWindow):
                 (self.is_valid_ip(self.targetEdit.text()) and self.targetEdit.text() != ""):
                 self.results = scanner.UDPscan(self.targetEdit.text(), self.targetPortEdit.text()) 
             else:
-                self.outputText.append(f"<h4><b style='color: red;'>Please enter the correct range of ports</b></h4> \n")
+                pass
         except Exception as ex:
             logging.error(f"Error during UDP scanning: {ex}")
             self.outputText.append(f"<h4><b style='color: red;'>Error during UDP scan: {ex}</b></h4> \n")
@@ -236,8 +236,14 @@ class PortScannerInterFace(QMainWindow):
             if filename:
                 with open(filename, "w") as file:
                     file.write("\tInformation about scanning:\n")
-                    file.write(f"1. IP address: {self.targetEdit.text()}\n")
-                    file.write(f"2. Ports: {self.targetPortEdit.text()}\n")
+                    if self.is_valid_ip(self.targetEdit.text()):
+                        file.write(f"1. IP address: {self.targetEdit.text()}\n")
+                    else:
+                        file.write(f"1. IP address: invalid range of IP\n")
+                    if self.is_valid_ports(self.targetPortEdit.text()):
+                        file.write(f"2. Ports: {self.targetPortEdit.text()}\n")
+                    else:
+                        file.write(f"1. IP address: invalid range of ports\n")
                     file.write(f"4. Scanning starts at {datetime.datetime.now()}")
                     for key, value in self.results.items():
                         file.write(f"\n\n\tResults of scanning {key}:")
@@ -275,8 +281,14 @@ class PortScannerInterFace(QMainWindow):
         """
         try:
             self.outputText.clear()
-            self.outputText.append(f"<h4><b>IP address:</b> {self.targetEdit.text()}</h4>")
-            self.outputText.append(f"<h4><b>Ports:</b> {self.targetPortEdit.text()}</h4>")
+            if self.is_valid_ip(self.targetEdit.text()):
+                self.outputText.append(f"<h4><b>IP address: </b><b style='color: green;'>{self.targetEdit.text()}</b></h4>")
+            else:
+                self.outputText.append(f"<h4><b>IP address: </b><b style='color: red;'>invalid range of IP</b></h4>")
+            if self.is_valid_ports(self.targetPortEdit.text()):
+                self.outputText.append(f"<h4><b>Ports: </b><b style='color: green;'>{self.targetPortEdit.text()}</b></h4>")
+            else:
+                self.outputText.append(f"<h4><b>Ports: </b><b style='color: green;'>invalid range of ports</b></h4>")
             self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</b></h4> \n")
 
             headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
@@ -381,8 +393,6 @@ class PortScannerInterFace(QMainWindow):
     def is_valid_ip(self, ip):
         """
             Функция проверки правильности введенного IP адреса или CIDR.
-
-            Если в строку вводить не IP или порт, выводить сообщение об ошибке
         """
         ip_pattern = re.compile(
             r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
@@ -414,3 +424,18 @@ class PortScannerInterFace(QMainWindow):
             return all(self.is_valid_ip(addr) for addr in ip_addresses)
     
         return False
+
+    def closeEvent(self, event):
+        """ Обработка события закрытия окна """
+        reply = QMessageBox.question(
+            self, 
+            'Exit Application', 
+            'Are you sure you want to exit?',
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()

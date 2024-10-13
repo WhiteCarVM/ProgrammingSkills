@@ -31,7 +31,6 @@ def parse_ips(ip_range):
         logging.error(f"Invalid format of IP addresses input: {val_err}")
         return []
 
-    print(ip_list)
     return ip_list
 
 def parse_ports(port_range):
@@ -82,9 +81,7 @@ def scan_ports(target_ips, target_ports, protocol):
     """
     Функция, реализующая многопоточность в приложении при сканировании.
     """
-    print(target_ips)
     target_ips = parse_ips(target_ips)
-    print(target_ips)
 
     ports = [target_ports]
     target_results = defaultdict(list)
