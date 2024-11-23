@@ -4,8 +4,11 @@ import socket
 import subprocess
 import textwrap
 
-
 def parser():
+    """
+        This function is using as a help menu
+    """
+    
     args = argparse.ArgumentParser(
     prog="MyNetCat",
     description='This is my netcat',
@@ -26,6 +29,18 @@ def parser():
     args.add_argument('-u', '--upload', help='upload file to target')
 
     return args.parse_args()
+
+def execute(command):
+    """
+        This function is using for executing commands on target
+    """
+    
+    command = command.strip()
+    if not command:
+        return
+    results = subprocess.check_output(shlex.split(command), stderr=subprocess.STDOUT)
+
+    return results.decode(encoding='utf-8')
 
 if __name__ == "__main__":
     args = parser()
