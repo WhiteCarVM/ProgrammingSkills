@@ -1,9 +1,8 @@
 import argparse
 import shlex
-import socket
-import subprocess
-import sys
 import textwrap
+
+import mynetcat
 
 def parser():
     """
@@ -23,30 +22,17 @@ def parser():
     '''))
 
     
-    args.add_argument('-c', '--comand', action='store_true', help='use command shell')
-    args.add_argument('-e', '--execute', help='execute specified command')
+    args.add_argument('-c', '--command', action='store_true', help='use command shell')
+    args.add_argument('-e', '--execute', type=str, help='execute specified command')
     args.add_argument('-l', '--listen', action='store_true', help='listen')
     args.add_argument('-p', '--port', type=int, default=10000, required=True, help="target port to connection")
-    args.add_argument('-t', '--target', required=True, help='target IP address to connection')
+    args.add_argument('-t', '--target', type=str, required=True, help='target IP address to connection')
     args.add_argument('-u', '--upload', help='upload file to target')
 
     return args.parse_args()
 
-def execute(command):
-    """
-        This function is using for executing commands on target
-    """
-    
-    command = command.strip()
-    if not command:
-        return
-    results = subprocess.check_output(shlex.split(command), stderr=subprocess.STDOUT)
-
-    return results.decode(encoding='utf-8')
-
 if __name__ == "__main__":
     args = parser()
-    if args.listen:
-        buffer = ""
-    else:
-        buffer = sys.stdin.read()
+    buffer = None
+
+    mynetcat.MyNetCat(args, buffer).run()
