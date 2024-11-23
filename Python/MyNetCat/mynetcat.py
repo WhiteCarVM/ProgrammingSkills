@@ -9,11 +9,12 @@ def parser():
     args = argparse.ArgumentParser(
     prog="MyNetCat",
     description='This is my netcat',
+    formatter_class=argparse.RawDescriptionHelpFormatter,
     epilog=textwrap.dedent('''Examples:
-            ./mynetcat.py -t 8.8.8.8 -p 4444 -l #connect to target and listen
-            ./mynetcat.py -t 8.8.8.8 -p 4444 -l -c # connect to target and use command shell
-            ./mynetcat.py -t 8.8.8.8 -p 4444 -l -u=test.txt #connect to target and upload file "test.txt"
-            ./mynetcat.py -t 8.8.8.8 -p 4444 -e="cat /etc/passwd" # connect to target and execute command "cat /etc/passwd"
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l #connect to target and listen
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -c # connect to target and use command shell
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -u=test.txt #connect to target and upload file "test.txt"
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 -e="cat /etc/passwd" # connect to target and execute command "cat /etc/passwd"
     '''))
 
     
