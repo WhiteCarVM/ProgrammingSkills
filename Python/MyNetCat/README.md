@@ -1,1 +1,1 @@
-This is test
+<strong>Example of use:</strong>
