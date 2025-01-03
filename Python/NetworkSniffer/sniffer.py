@@ -25,9 +25,17 @@ def sniff(host):
     
     try:
         while True:
-            buffer = sniffer.recvfrom(65565)[0]
-            ip_header = ip_decoder.IP(buffer[:20])
+            ip_buffer = sniffer.recvfrom(65565)[0]
+            ip_header = ip_decoder.IP(ip_buffer[:20])
             print(f"{ip_header.src_ip_address}/{ip_header.protocol} -> {ip_header.dst_ip_address}/{ip_header.protocol}")
+            if ip_header.protocol == "ICMP":
+                print(f"IP version: {ip_header.version}, Header length: {ip_header.size_of_header}, Time to live: {ip_header.ttl}")
+
+                offset = ip_header.size_of_header
+                icmp_buffer = ip_buffer[offset:offset+8]      
+                #Здесь проблема, связанная с буфером
+                icmp_header = icmp_decoder.ICMP(icmp_buffer)
+                print(f"ICMP type: {icmp_header.type}, ICMP code: {icmp_header.code}")
     except KeyboardInterrupt:
         if OS == 'nt':
             sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)

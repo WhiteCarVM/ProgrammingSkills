@@ -1,5 +1,4 @@
 import ipaddress
-import socket
 import struct
 
 class IP:
