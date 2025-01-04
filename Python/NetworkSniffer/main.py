@@ -7,7 +7,7 @@ import time
 from termcolor import colored
 
 def main():
-    print(colored(f"Start of sniffing on {scanner.SUBNET}", "green"))
+    print(colored(f"Start of sniffing on {scanner.SUBNET} (Ctrl+C to exit)", "green"))
     print(colored('You can change subnet mask in scanner.py file\n', 'blue'))
     
     sc = scanner.Scanner(scanner.HOST)
