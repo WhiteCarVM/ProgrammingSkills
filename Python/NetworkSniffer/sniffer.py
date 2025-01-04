@@ -4,6 +4,8 @@ import socket
 import os
 import sys
 
+from termcolor import colored
+
 OS = os.name
 
 def sniff(host):
@@ -34,7 +36,7 @@ def sniff(host):
                     print(f"IP version: {ip_header.version}, Header length: {ip_header.ihl}, Time to live: {ip_header.ttl}")
                     offset = ip_header.ihl * 4
                     if len(ip_buffer) < offset + 8:
-                        print(f"Error: ICMP Buffer is too small (available length is {len(ip_buffer) - offset}), possibly due to fragmentation or an incomplete packet.")
+                        print(colored(f"Error: ICMP Buffer is too small (available length is {len(ip_buffer) - offset}).", "red"))
                         continue
 
                     icmp_buffer = ip_buffer[offset:offset + 8]
@@ -43,18 +45,10 @@ def sniff(host):
                         icmp_header = icmp_decoder.ICMP(icmp_buffer)
                         print(f"ICMP type: {icmp_header.type}, ICMP code: {icmp_header.code}")
                     except ValueError as ve:
-                        print(f"Error parsing ICMP header: {ve}")
+                        print(colored(f"Error parsing ICMP header: {ve}", "red"))
                         continue
         except KeyboardInterrupt:
             if OS == 'nt':
                 sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
-            print("\nSniffer stopped.")
+            print(colored("\nSniffer stopped.", "green"))
             sys.exit()
-
-def main():
-    host = get_local_ip()
-    print(f"Start of sniffing on {host}\n")
-    sniff(host)
-
-if __name__ == "__main__":
-    main()
