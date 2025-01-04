@@ -6,7 +6,7 @@ class IP:
         header = struct.unpack("<BBHHHBBH4s4s", buffer)
 
         self.version = header[0] >> 4
-        self.size_of_header = header[0] & 0xff
+        self.ihl = header[0] & 0xff
         self.type_of_service = header[1]
         self.size_of_packet = header[2]
         self.id = header[3]
@@ -20,6 +20,7 @@ class IP:
         self.src_ip_address = ipaddress.ip_address(self.src_ip)
         self.dst_ip_address = ipaddress.ip_address(self.dst_ip)
 
+        self.size_of_header = header[0] & 0xff
         self.protocol_map = {1:"ICMP", 6:"TCP", 17:"UDP"}
 
         try:

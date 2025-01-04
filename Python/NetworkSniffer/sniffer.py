@@ -32,10 +32,17 @@ def sniff(host):
                 print(f"IP version: {ip_header.version}, Header length: {ip_header.size_of_header}, Time to live: {ip_header.ttl}")
 
                 offset = ip_header.size_of_header
-                icmp_buffer = ip_buffer[offset:offset+8]      
+                icmp_buffer = ip_buffer[offset:offset+8]
+                if len(icmp_buffer) < 8:
+                    print("Error: Buffer must be at least 8 bytes long")
+                    continue
                 #Здесь проблема, связанная с буфером
-                icmp_header = icmp_decoder.ICMP(icmp_buffer)
-                print(f"ICMP type: {icmp_header.type}, ICMP code: {icmp_header.code}")
+                try:
+                    icmp_header = icmp_decoder.ICMP(icmp_buffer)
+                    print(f"ICMP type: {icmp_header.type}, ICMP code: {icmp_header.code}")
+                except ValueError as ve:
+                    print(f"Error: {ve}")
+                    sys.exit()
     except KeyboardInterrupt:
         if OS == 'nt':
             sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
