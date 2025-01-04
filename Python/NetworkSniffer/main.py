@@ -10,18 +10,10 @@ def get_local_ip():
 
     return local_ip[0]
 
-HOST = get_local_ip()
-
 def main():
-    """
-        Функция отвечает за пользовательский ввод
-    """
-
-    # добавить фильтрацию входных данных
-    global HOST
-    HOST = input("Enter target host\n> ")
-
+    host = get_local_ip() 
+    print(f"Start of sniffing on {host}\n")
+    sniff(host)
 
 if __name__ == "__main__":
     main()
-    sniff(HOST)

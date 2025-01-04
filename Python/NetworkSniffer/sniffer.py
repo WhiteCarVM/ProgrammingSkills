@@ -27,7 +27,7 @@ def sniff(host):
         while True:
             ip_buffer = sniffer.recvfrom(65565)[0]
             ip_header = ip_decoder.IP(ip_buffer[:20])
-            print(f"{ip_header.src_ip_address}/{ip_header.protocol} -> {ip_header.dst_ip_address}/{ip_header.protocol}")
+            print(f"\n{ip_header.src_ip_address}/{ip_header.protocol} -> {ip_header.dst_ip_address}/{ip_header.protocol}")
             if ip_header.protocol == "ICMP":
                 print(f"IP version: {ip_header.version}, Header length: {ip_header.size_of_header}, Time to live: {ip_header.ttl}")
 
