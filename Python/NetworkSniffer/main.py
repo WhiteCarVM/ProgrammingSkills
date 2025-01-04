@@ -1,26 +1,20 @@
+import scanner
 import socket
 import sys
+import threading
+import time
 
-from sniffer import sniff
 from termcolor import colored
 
-def get_local_ip():
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            sock.connect(("8.8.8.8", 80))
-
-            local_ip = sock.getsockname()
-
-        return local_ip[0]
-    except Exception as ex:
-        print(colored(f"Error: {ex}", "red"))
-        print(colored("\nSniffer stoped", "green"))
-        sys.exit()
-
 def main():
-    host = get_local_ip() 
-    print(colored(f"Start of sniffing on {host}", "green"))
-    sniff(host)
+    print(colored(f"Start of sniffing on {scanner.SUBNET}", "green"))
+    print(colored('You can change subnet mask in scanner.py file\n', 'blue'))
+    
+    sc = scanner.Scanner(scanner.HOST)
+    time.sleep(5)
+    th = threading.Thread(target=scanner.udp_sender)
+    th.start()
+    sc.sniff()
 
 if __name__ == "__main__":
     main()
