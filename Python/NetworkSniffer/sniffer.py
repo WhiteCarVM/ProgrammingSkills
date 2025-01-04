@@ -1,16 +1,4 @@
-import icmp_decoder
-import ip_decoder
-import os
-import sys
-import socket
-
-OS = os.name
-
 def sniff(host):
-    """
-        Функция отвечает за создание сокета и получение ответа
-    """
-
     if OS == 'nt':
         socket_protocol = socket.IPPROTO_IP
     else:
@@ -25,24 +13,25 @@ def sniff(host):
     
     try:
         while True:
-            ip_buffer = sniffer.recvfrom(65565)[0]
+            ip_buffer = sniffer.recvfrom(65535)[0]
             ip_header = ip_decoder.IP(ip_buffer[:20])
             print(f"\n{ip_header.src_ip_address}/{ip_header.protocol} -> {ip_header.dst_ip_address}/{ip_header.protocol}")
             if ip_header.protocol == "ICMP":
-                print(f"IP version: {ip_header.version}, Header length: {ip_header.size_of_header}, Time to live: {ip_header.ttl}")
+                print(f"IP version: {ip_header.version}, Header length: {ip_header.ihl}, Time to live: {ip_header.ttl}")
 
-                offset = ip_header.size_of_header
+                offset = ip_header.ihl * 4
                 icmp_buffer = ip_buffer[offset:offset+8]
+                
                 if len(icmp_buffer) < 8:
-                    print("Error: Buffer must be at least 8 bytes long")
+                    print(f"Error: ICMP Buffer is too small(length is {len(icmp_buffer)}), possibly due to fragmentation or an incomplete packet.")
                     continue
-                #Здесь проблема, связанная с буфером
+                
                 try:
                     icmp_header = icmp_decoder.ICMP(icmp_buffer)
                     print(f"ICMP type: {icmp_header.type}, ICMP code: {icmp_header.code}")
                 except ValueError as ve:
                     print(f"Error: {ve}")
-                    sys.exit()
+                    continue
     except KeyboardInterrupt:
         if OS == 'nt':
             sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)
