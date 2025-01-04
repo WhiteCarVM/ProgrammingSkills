@@ -3,10 +3,10 @@ import socket
 from sniffer import sniff
 
 def get_local_ip():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.connect(("8.8.8.8", 80))
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.connect(("8.8.8.8", 80))
 
-    local_ip = sock.getsockname()
+        local_ip = sock.getsockname()
 
     return local_ip[0]
 
