@@ -93,5 +93,30 @@ then
 	python2 /tmp/ports.py
 fi
 rm -rf /tmp/ports.py
-echo
+
+echo -e "\nЧасть3: Пользователи и группы"
+echo -e "\n1)Пользователи:"
+
+home_grep=$(ls /home/)
+users=()
+users+=root
+for user in $home_grep;
+do
+	users+=" $user"
+	echo $user
+done
+
+for user in $users;
+do
+	current=$(whoami)
+	if [[ $user != $current ]];
+	then
+		echo -e "\n$user"
+	else
+		echo -e "\n$user -- current user"
+	fi
+
+	echo $(id $user)
+done
+
 echo "-------------------------------------------------------------------------------------------------------------------"
