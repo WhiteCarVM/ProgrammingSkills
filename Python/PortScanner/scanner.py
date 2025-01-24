@@ -74,7 +74,7 @@ def scan_port(target, port, protocol):
         result = [f"{port}\\{protocol}", "closed", "N/A"]
     except Exception as ex:
         logging.error(f"Error scanning {protocol} port {port} on {target}: {ex}")
-    
+
     return target, result
 
 def scan_ports(target_ips, target_ports, protocol):

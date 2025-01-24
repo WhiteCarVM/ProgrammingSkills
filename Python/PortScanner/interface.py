@@ -14,12 +14,12 @@ import scanner
 
 class PortScannerInterFace(QMainWindow):
     '''
-        Этот класс отвечает за пользовательский интерфейс: создание кнопок, окон, надписей, вывод результатов.  
+        Этот класс отвечает за пользовательский интерфейс: создание кнопок, окон, надписей, вывод результатов.
     '''
 
     def __init__(self):
         super().__init__()
-        
+
         self.background = "708090"
         self.color = "#FFFF33"
         self.results = {}
@@ -40,13 +40,13 @@ class PortScannerInterFace(QMainWindow):
         save, start, close, output = self.createButtons()
 
         mainLayout = QGridLayout()
-        mainLayout.addLayout(targetData, 0, 1, 1, 2)  
-        mainLayout.addLayout(optionsData, 0, 3, 1, 2)   
+        mainLayout.addLayout(targetData, 0, 1, 1, 2)
+        mainLayout.addLayout(optionsData, 0, 3, 1, 2)
         mainLayout.addWidget(save, 1, 0, 1, 1)
         mainLayout.addWidget(start, 1, 2, 1, 2)
         mainLayout.addWidget(close, 1, 5, 1, 1)
         mainLayout.addWidget(output, 2, 0, 1, 6)
-        
+
         centralWidget = QtWidgets.QWidget()
         centralWidget.setLayout(mainLayout)
         self.setCentralWidget(centralWidget)
@@ -56,7 +56,7 @@ class PortScannerInterFace(QMainWindow):
             Создание меню. ДОПИСАТЬ ЕЩЕ ПАРУ ДЕЙСВИЙ!!!
         """
         mainMenu = self.menuBar()
-        mainMenu.setStyleSheet("color: red; background-color: #FFFFFF")
+        mainMenu.setStyleSheet("color: red; background-color: '#FFFFFF'")
         programmMenu = mainMenu.addMenu("&Programm")
 
         newAction = QAction("&New scan", self)
@@ -84,7 +84,7 @@ class PortScannerInterFace(QMainWindow):
         helpAction.setShortcut("Ctrl+M")
         helpAction.setStatusTip("Read about this tool")
         helpAction.triggered.connect(self.helpActionFunction)
-        
+
         helpMenu.addAction(helpAction)
 
         aboutMenu = mainMenu.addMenu("&About")
@@ -94,11 +94,11 @@ class PortScannerInterFace(QMainWindow):
         aboutAction.setStatusTip("Read about developer this tool")
         aboutAction.triggered.connect(self.aboutActionFunction)
 
-        aboutMenu.addAction(aboutAction)   
+        aboutMenu.addAction(aboutAction)
 
     def initOptions(self):
-        """ 
-            Функция выбора некоторых опций. Задается TCP или UDP сканирование. ДОПИСАТЬ ПАРУ ФУНКЦИЙ!!! 
+        """
+            Функция выбора некоторых опций. Задается TCP или UDP сканирование. ДОПИСАТЬ ПАРУ ФУНКЦИЙ!!!
         """
         optionsLayout = QGridLayout()
 
@@ -137,18 +137,18 @@ class PortScannerInterFace(QMainWindow):
         """
         saveButton = QPushButton("Save to file")
         saveButton.setFont(QFont("Times", 15))
-        saveButton.setStyleSheet(f"background-color: #776699; color: {self.color}")
+        saveButton.setStyleSheet(f"background-color: '#776699'; color: {self.color}")
         saveButton.clicked.connect(self.saveToFile)
 
         scanningButton = QPushButton("Start scanning")
         scanningButton.setFont(QFont("Times", 15))
-        scanningButton.setStyleSheet(f"background-color: #776699; color: {self.color};")
+        scanningButton.setStyleSheet(f"background-color: '#776699'; color: {self.color};")
         scanningButton.clicked.connect(self.scanningResults)
-        scanningButton.setShortcut("Ctrl+B")    
+        scanningButton.setShortcut("Ctrl+B")
 
         exitButton = QPushButton("Exit")
         exitButton.setFont(QFont("Times", 15))
-        exitButton.setStyleSheet(f"background-color: #776699; color: {self.color}")
+        exitButton.setStyleSheet(f"background-color: '#776699'; color: {self.color}")
         exitButton.clicked.connect(self.exitApp)
 
         self.outputText = QTextEdit()
@@ -189,7 +189,7 @@ class PortScannerInterFace(QMainWindow):
 
     def syn_scan(self):
         self.outputText.append("<h4><b style='color: red;'>This function developes</b></h4>")
-    
+
     def xmas_scan(self):
         self.outputText.append("<h4><b style='color: red;'>This function developes</b></h4>")
 
@@ -206,7 +206,7 @@ class PortScannerInterFace(QMainWindow):
 
     def helpActionFunction(self):
         """
-            Функция для объяснения прииложения 
+            Функция для объяснения прииложения
         """
         msg = QMessageBox()
         msg.setWindowTitle("Manual")
@@ -250,7 +250,7 @@ class PortScannerInterFace(QMainWindow):
                         file.write("\n---------------------------------------------------------------------\n")
                         file.write("|\tPort\t|\tStatus\t    |\tService\t    |\tVersion\t    |")
                         file.write("\n---------------------------------------------------------------------\n")
-                
+
                         for result in value:
                             file.write("|               |                   |               |               |\n")
                             file.write(f"|\t{result[0]}\t|\t{result[1]}\t    |\t{result[2]}\t    |\tNone\t    |\n")
@@ -259,7 +259,7 @@ class PortScannerInterFace(QMainWindow):
         except Exception as ex:
             logging.error(f"Error saving to file: {ex}")
             self.outputText.append(f"<h4><b style='color: red;'>Error saving to file: {ex}</b></h4> \n")
-                
+
     def exitApp(self):
         """
             Функция закрытия приложения
@@ -270,7 +270,7 @@ class PortScannerInterFace(QMainWindow):
         exitBox.setGeometry(750, 450, 400, 300)
         exitBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         exitBox.setDefaultButton(QMessageBox.Yes)
-        
+
         result = exitBox.exec_()
         if result == QMessageBox.Yes:
             sys.exit(0)
@@ -304,7 +304,7 @@ class PortScannerInterFace(QMainWindow):
                     self.cursor = self.outputText.textCursor()
                     self.cursor.insertTable(len(value)+1, len(headers))
 
-            
+
                     for header in headers:
                         self.cursor.insertText(header)
                         self.cursor.movePosition(QTextCursor.NextCell)
@@ -331,12 +331,12 @@ class PortScannerInterFace(QMainWindow):
         """
         targetLayout = QGridLayout()
         targetLayout.setSpacing(20)
-        
+
         targetLabel = QLabel("IP address:")
         targetLabel.setFont(QFont("Times", 15))
         targetLabel.setStyleSheet(f"color: {self.color};")
         targetLabel.setAlignment(Qt.AlignLeft)
-        
+
         self.targetEdit = QLineEdit()
         self.targetEdit.setStyleSheet(f"background-color: white; color: black;")
         self.targetEdit.setPlaceholderText("Example: 8.8.8.8")
@@ -403,7 +403,7 @@ class PortScannerInterFace(QMainWindow):
         range_pattern = re.compile(
             r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}-(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
         )
-    
+
         list_pattern = re.compile(
             r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?:,(?:[0-9]{1,3}\.){3}[0-9]{1,3})*$'
         )
@@ -422,14 +422,14 @@ class PortScannerInterFace(QMainWindow):
         elif list_pattern.match(ip):
             ip_addresses = ip.split(',')
             return all(self.is_valid_ip(addr) for addr in ip_addresses)
-    
+
         return False
 
     def closeEvent(self, event):
         """ Обработка события закрытия окна """
         reply = QMessageBox.question(
-            self, 
-            'Exit Application', 
+            self,
+            'Exit Application',
             'Are you sure you want to exit?',
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
