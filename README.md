@@ -61,6 +61,35 @@
 
 ### Использование
 
+Для начала необходимо убедиться, на устройстве установлен python3.
+
+	python3 --version
+
+Далее клонируем репозиторий:
+
+	git clone https://github.com/WhiteCarVM/ProgrammingSkills.git
+
+Переходим в папку с проектом:
+
+	cd Python/MyNetCat
+
+Запускаем инструмент:
+
+	python3 mynetcat.py -t <IP address> -p <port> <options>
+
+Перед началом использования рекомендую почитать меню помощи:
+
+	python3 mynetcat.py -h
+
+### Пример использзования
+
+![Image alt](https://github.com/WhiteCarVM/ProgrammingSkills/blob/main/pictures_to_readme/mynetcat_example.png)
+
+В примере выше в левой части терминала я запускаю сервер на прослушивание входящих соединений и выполнение команды "head /etc/passwd". 
+В правой части терминала я подключаю клиента к серверу, клиент получает результат работы команды.
+
 ### Дополнительные сведения
+
+Инструмент находится на стадии тестирования и доработки. При обнаружении ошибок просьба сообщить.
 
 # NetworkSniffer

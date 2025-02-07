@@ -13,15 +13,15 @@ def parser():
     """
     
     args = argparse.ArgumentParser(
-        prog="MyNetCat",
+        prog="python3 mynetcat.py",
         description='This is my netcat',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent('''Examples:
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 # connect to target
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l #connect to target and listen
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -c # connect to target and use command shell
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -u=test.txt #connect to target and upload file "test.txt"
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -e="cat /etc/passwd" # connect to target and execute command "cat /etc/passwd"
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 # connect to target server
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l #target server listens connections
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -c # target server listens connections, after connection client can use command shell
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -u=test.txt # target server listens connections, after connection client can upload file "test.txt"
+            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -e="cat /etc/passwd" # target server listens connections, after connection client can execute command "cat /etc/passwd"
     '''))
 
     
