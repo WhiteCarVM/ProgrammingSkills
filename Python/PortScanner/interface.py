@@ -108,17 +108,21 @@ class PortScannerInterFace(QMainWindow):
         udpScan = QRadioButton("UDP scanning")
         udpScan.clicked.connect(self.udp_scan)
 
-        synScan = QRadioButton("SYN scanning")
-        synScan.clicked.connect(self.syn_scan)
+        max_workers_label = QLabel("Threads:")
+        max_workers_label.setFont(QFont("Times", 15))
+        max_workers_label.setStyleSheet(f"color: {self.color};")
+        max_workers_label.setAlignment(Qt.AlignLeft)
 
-        xmasScan = QRadioButton("XMaS scanning")
-        xmasScan.clicked.connect(self.xmas_scan)
+        self.max_workers = QLineEdit()
+        self.max_workers.setStyleSheet(f"background-color: white; color: black;")
+        self.max_workers.setPlaceholderText("Example: 10")
+        self.max_workers.setMaximumWidth(200)
 
         optionsVLayout = QGridLayout()
         optionsVLayout.addWidget(tcpScan, 0, 0, 1, 1)
         optionsVLayout.addWidget(udpScan, 0, 1, 1, 1)
-        optionsVLayout.addWidget(synScan, 2, 0, 1, 1)
-        optionsVLayout.addWidget(xmasScan, 2, 1, 1, 1)
+        optionsVLayout.addWidget(max_workers_label, 2, 0, 1, 1)
+        optionsVLayout.addWidget(self.max_workers, 2, 1, 1, 1)
 
         optionsFrame = QFrame()
         optionsFrame.setFrameShape(QFrame.Box)
@@ -187,12 +191,6 @@ class PortScannerInterFace(QMainWindow):
             logging.error(f"Error during UDP scanning: {ex}")
             self.outputText.append(f"<h4><b style='color: red;'>Error during UDP scan: {ex}</b></h4> \n")
 
-    def syn_scan(self):
-        self.outputText.append("<h4><b style='color: red;'>This function developes</b></h4>")
-
-    def xmas_scan(self):
-        self.outputText.append("<h4><b style='color: red;'>This function developes</b></h4>")
-
 #Следующий фрагмент кода отвечает за функции меню
 
     def newActionFunction(self):
@@ -201,6 +199,7 @@ class PortScannerInterFace(QMainWindow):
         """
         self.targetEdit.clear()
         self.targetPortEdit.clear()
+        self.max_workers.clear()
         self.outputText.clear()
         self.results.clear()
 
@@ -426,7 +425,9 @@ class PortScannerInterFace(QMainWindow):
         return False
 
     def closeEvent(self, event):
-        """ Обработка события закрытия окна """
+        """ 
+        Обработка события закрытия окна 
+        """
         reply = QMessageBox.question(
             self,
             'Exit Application',
