@@ -1,199 +1,163 @@
 import argparse
-import shlex
+import os
 import socket
 import subprocess
+import shlex
 import sys
-import textwrap
 import threading
-import time
+
 
 def parser():
     """
-        This function is using as a help menu
+    Parses command-line arguments and displays help information.
     """
-    
     args = argparse.ArgumentParser(
         prog="python3 mynetcat.py",
-        description='This is my netcat',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent('''Examples:
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 # connect to target server
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l #target server listens connections
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -c # target server listens connections, after connection client can use command shell
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -u=test.txt # target server listens connections, after connection client can upload file "test.txt"
-            python3 mynetcat.py -t 8.8.8.8 -p 4444 -l -e="cat /etc/passwd" # target server listens connections, after connection client can execute command "cat /etc/passwd"
-    '''))
+        description='Enhanced Netcat Tool'
+    )
 
-    
-    args.add_argument('-c', '--command', action='store_true', help='use command shell')
-    args.add_argument('-e', '--execute', type=str, help='execute specified command')
-    args.add_argument('-l', '--listen', action='store_true', help='listen mode')
-    args.add_argument('-p', '--port', type=int, default=10000, required=True, help="target port to connection")
-    args.add_argument('-t', '--target', type=str, default="0.0.0.0", required=True, help='target IP address to connection')
-    args.add_argument('-u', '--upload', help='upload file to target')
+    args.add_argument('-c', '--command', action='store_true', help='Enable command shell')
+    args.add_argument('-e', '--execute', type=str, help='Execute specified command')
+    args.add_argument('-l', '--listen', action='store_true', help='Enable listening mode')
+    args.add_argument('-p', '--port', type=int, required=True, help="Port number")
+    args.add_argument('-t', '--target', type=str, required=True, help='Target IP address')
+    args.add_argument('-u', '--upload', type=str, help='Upload file')
 
     return args.parse_args()
 
-class MyNetCat:
-    def __init__(self, args, buffer=None):
-        """
-            This function initializes some parameters
-        """
 
+class MyNetCat:
+    def __init__(self, args):
         self.args = args
-        self.buffer = buffer
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def run(self):
         """
-            This function runs MyNetCat 
+        Runs the MyNetCat instance based on the specified arguments.
         """
-
         try:
             if self.args.listen:
+                print("[INFO] Starting in listen mode...")
                 self.listen()
             else:
+                print(f"[INFO] Connecting to {self.args.target}:{self.args.port}...")
                 self.send()
         except KeyboardInterrupt:
-            time.sleep(1)
-            print("\nExiting...")
-            time.sleep(1)
+            print("\n[INFO] Exiting...")
             self.socket.close()
             sys.exit()
 
     def execute(self, command):
         """
-            This function is used for executing commands on target
+        Executes a shell command and returns the output.
         """
-
+        print(f"[INFO] Executing command: {command}")
         command = command.strip()
-
         try:
             response = subprocess.check_output(shlex.split(command), stderr=subprocess.STDOUT)
             return response.decode()
         except subprocess.CalledProcessError as ex:
-            return f"Command failed: {ex.output.decode()}"
+            return f"[ERROR] Command failed: {ex.output.decode()}"
 
     def handle(self, client_socket):
         """
-        This function creates tasks for arguments.
+        Handles incoming connections and processes the requested action.
         """
-
+        print("[INFO] Handling new connection...")
         if self.args.execute:
             response = self.execute(self.args.execute)
-            try:
-                client_socket.send(response.encode())
-            except Exception as e:
-                print(f"Error sending response: {e}")
+            client_socket.send(response.encode())
             client_socket.close()
         
         elif self.args.upload:
-            file_buffer = b''
-            while True:
-                try:
-                    data = client_socket.recv(4096)
+            print(f"[INFO] Receiving file: {self.args.upload}")
+            file_size = int(client_socket.recv(16).decode().strip())
+            print(f"[INFO] Expected file size: {file_size} bytes")
+            received_size = 0
+            
+            with open(self.args.upload, 'wb') as file:
+                while received_size < file_size:
+                    data = client_socket.recv(min(4096, file_size - received_size))
                     if not data:
                         break
-                    file_buffer += data
-                except Exception as e:
-                    print(f"Error receiving data: {e}")
-                    break
-        
-            if file_buffer:
-                with open(self.args.upload, 'wb') as file:
-                    file.write(file_buffer)
-                message = f"File {self.args.upload} saved successfully."
-                try:
-                    client_socket.send(message.encode())
-                except Exception as e:
-                    print(f"Error sending response: {e}")
+                    file.write(data)
+                    received_size += len(data)
+                    print(f"[INFO] Received {received_size}/{file_size} bytes")
+
+            print(f"[SUCCESS] File {self.args.upload} saved successfully.")
+            client_socket.send(f"[INFO] File {self.args.upload} uploaded successfully.".encode())
             client_socket.close()
     
         elif self.args.command:
-            try:
-                while True:
-                    client_socket.send(b"user: @> ")
-                    cmd_buffer = b''
-
-                    while b'\n' not in cmd_buffer:
-                        try:
-                            data = client_socket.recv(1024)
-                            if not data:
-                                print("Client disconnected.")
-                                return
-                            cmd_buffer += data
-                        except Exception as e:
-                            print(f"Error receiving command: {e}")
-                            return
-                
-                    if cmd_buffer:
-                        response = self.execute(cmd_buffer.decode().strip())
-                        if response:
-                            try:
-                                client_socket.send(response.encode())
-                            except BrokenPipeError:
-                                print("Client disconnected while sending response.")
-                            except Exception as e:
-                                print(f"Error sending response: {e}")
-            except Exception as ex:
-                print("Error occurred:", ex)
-            finally:
-                client_socket.close()
-
+            print("[INFO] Command shell started.")
+            while True:
+                client_socket.send(b"user: @> ")
+                cmd_buffer = b""
+                while b"\n" not in cmd_buffer:
+                    data = client_socket.recv(1024)
+                    if not data:
+                        print("[INFO] Client disconnected.")
+                        return
+                    cmd_buffer += data
+                response = self.execute(cmd_buffer.decode().strip())
+                client_socket.send(response.encode())
 
     def listen(self):
         """
-            This function describes listener for incoming clients
+        Starts a server and listens for incoming connections.
         """
-
         self.socket.bind((self.args.target, self.args.port))
         self.socket.listen(5)
-        print(f"Listening on {self.args.target}:{self.args.port}")
+        print(f"[INFO] Listening on {self.args.target}:{self.args.port}")
 
         while True:
             client_socket, address = self.socket.accept()
-            print(f"Connection from {address[0]}:{address[1]} established.")
+            print(f"[INFO] Connection from {address[0]}:{address[1]} established.")
             client_thread = threading.Thread(target=self.handle, args=(client_socket,))
             client_thread.start()
 
     def send(self):
         """
-        This function describes sender to MyNetCat
+        Connects to a remote host and sends data.
         """
-
         try:
             self.socket.connect((self.args.target, self.args.port))
+            print(f"[INFO] Connected to {self.args.target}:{self.args.port}")
 
-            if self.buffer:
-                self.socket.send(self.buffer)
+            if self.args.upload:
+                file_path = self.args.upload
+                if not os.path.isfile(file_path):
+                    print(f"[ERROR] File {file_path} not found.")
+                    return
+                
+                file_size = os.path.getsize(file_path)
+                self.socket.send(f"{file_size:<16}".encode())
+                
+                with open(file_path, "rb") as file:
+                    sent_size = 0
+                    while chunk := file.read(4096):
+                        self.socket.send(chunk)
+                        sent_size += len(chunk)
+                        print(f"[INFO] Sent {sent_size}/{file_size} bytes")
 
-            while True:
-                recv_length = 1
-                response = ""
-                while recv_length:
-                    data = self.socket.recv(4096)
-                    recv_length = len(data)
-                    response += data.decode()
-                    if recv_length < 4096:
+                print(f"[SUCCESS] File {file_path} sent successfully.")
+                response = self.socket.recv(4096)
+                print(response.decode())
+            else:
+                while True:
+                    response = self.socket.recv(4096)
+                    if not response:
                         break
-            
-                if response:
-                    print(response)
-
-                try:
+                    print(response.decode())
                     buffer = input("> ") + "\n"
                     self.socket.send(buffer.encode())
-                except EOFError:
-                    print("Exiting.")
-                    break
         except KeyboardInterrupt:
-            print("\nUser terminated")
+            print("\n[INFO] User terminated")
         finally:
             self.socket.close()
 
+
 if __name__ == "__main__":
     args = parser()
-    buffer = None
-
-    MyNetCat(args, buffer).run()
+    MyNetCat(args).run() 
