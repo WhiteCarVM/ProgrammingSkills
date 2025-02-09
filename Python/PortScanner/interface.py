@@ -1,16 +1,15 @@
+import datetime
+import logging
+import re
+import scanner
+import socket
+import sys
+
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from collections import defaultdict
-
-import re
-import sys
-import socket
-import logging
-import datetime
-
-import scanner
 
 class PortScannerInterFace(QMainWindow):
     '''
@@ -20,11 +19,24 @@ class PortScannerInterFace(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.setup_logging()
         self.background = "708090"
         self.color = "#FFFF33"
         self.results = {}
 
+        self.target_ports = []
+        self.progress = None
         self.initUI()
+
+# Следующий фрагмент кода отвечает за логированние
+    def setup_logging(self):
+        logging.basicConfig(
+            filename='port_scanner.log',
+            filemode='a',
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            level=logging.INFO
+        )
+        logging.info("Logging initialized.")
 
 # Следующий фрагмент кода отвечает за интерфейс
     def initUI(self):
@@ -38,6 +50,7 @@ class PortScannerInterFace(QMainWindow):
         targetData = self.initTargetAndStart()
         optionsData = self.initOptions()
         save, start, close, output = self.createButtons()
+        self.progress = QProgressBar(self)
 
         mainLayout = QGridLayout()
         mainLayout.addLayout(targetData, 0, 1, 1, 2)
@@ -46,10 +59,11 @@ class PortScannerInterFace(QMainWindow):
         mainLayout.addWidget(start, 1, 2, 1, 2)
         mainLayout.addWidget(close, 1, 5, 1, 1)
         mainLayout.addWidget(output, 2, 0, 1, 6)
+        mainLayout.addWidget(self.progress, 3, 0, 1, 6) 
 
         centralWidget = QtWidgets.QWidget()
         centralWidget.setLayout(mainLayout)
-        self.setCentralWidget(centralWidget)
+        self.setCentralWidget(centralWidget)    
 
     def createMenus(self):
         """
@@ -57,7 +71,7 @@ class PortScannerInterFace(QMainWindow):
         """
         mainMenu = self.menuBar()
         mainMenu.setStyleSheet("color: red; background-color: '#FFFFFF'")
-        programmMenu = mainMenu.addMenu("&Programm")
+        programmMenu = mainMenu.addMenu("&Program")
 
         newAction = QAction("&New scan", self)
         newAction.setShortcut("Ctrl+N")
@@ -134,6 +148,36 @@ class PortScannerInterFace(QMainWindow):
         optionsLayout.addWidget(optionsFrame, 0, 0, 1, 2)
 
         return optionsLayout
+
+    def start_scan(self):
+        # Запуск сканирования в потоке
+        logging.info("Scan started.")
+        self.progress.setValue(0)
+        
+        # Стандартный список портов для примера. Укажите ваши порты
+        self.target_ports = list(range(1, 1024))  # Измените по необходимости
+
+        self.worker_thread = threading.Thread(target=self.scan_ports)
+        self.worker_thread.start()
+
+    def scan_ports(self):
+        total_ports = len(self.target_ports)
+        for i, port in enumerate(self.target_ports):
+            # Здесь разместите код для сканирования порта
+            logging.info(f"Scanning port {port}...")
+
+            # Логика сканирования порта
+            # Например, socket соединение
+
+            # Обновление индикатора прогресса
+            progress_value = int((i + 1) / total_ports * 100)
+            self.update_progress(progress_value)
+        
+        logging.info("Scan completed.")
+
+    def update_progress(self, value):
+        # Обновление прогресса в главном потоке
+        QtCore.QMetaObject.invokeMethod(self.progress, "setValue", QtCore.Qt.QueuedConnection, QtCore.QVariant(value))
 
     def createButtons(self):
         """
@@ -287,7 +331,7 @@ class PortScannerInterFace(QMainWindow):
             if self.is_valid_ports(self.targetPortEdit.text()):
                 self.outputText.append(f"<h4><b>Ports: </b><b style='color: green;'>{self.targetPortEdit.text()}</b></h4>")
             else:
-                self.outputText.append(f"<h4><b>Ports: </b><b style='color: green;'>invalid range of ports</b></h4>")
+                self.outputText.append(f"<h4><b>Ports: </b><b style='color: red;'>invalid range of ports</b></h4>")
             self.outputText.append(f"<h4><b>Scanning starts at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</b></h4> \n")
 
             headers = ["Port\t", "Status\t", "Service\t", "Version\t"]
