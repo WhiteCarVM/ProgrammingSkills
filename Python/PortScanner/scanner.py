@@ -98,6 +98,9 @@ def scan_ports(target_ips, target_ports, protocol):
             target_results[target].append(result)
     return {target: results for target, results in target_results.items() if results}
 
+def update_progress(value):
+        QtCore.QMetaObject.invokeMethod(self.progress, "setValue", QtCore.Qt.QueuedConnection, QtCore.QVariant(value))
+
 def TCPscan(target_ips, target_ports):
     """
     Функция реализующая TCP сканирование.
