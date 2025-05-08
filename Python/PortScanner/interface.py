@@ -149,36 +149,6 @@ class PortScannerInterFace(QMainWindow):
 
         return optionsLayout
 
-    def start_scan(self):
-        # Запуск сканирования в потоке
-        logging.info("Scan started.")
-        self.progress.setValue(0)
-        
-        # Стандартный список портов для примера. Укажите ваши порты
-        self.target_ports = list(range(1, 1024))  # Измените по необходимости
-
-        self.worker_thread = threading.Thread(target=self.scan_ports)
-        self.worker_thread.start()
-
-    def scan_ports(self):
-        total_ports = len(self.target_ports)
-        for i, port in enumerate(self.target_ports):
-            # Здесь разместите код для сканирования порта
-            logging.info(f"Scanning port {port}...")
-
-            # Логика сканирования порта
-            # Например, socket соединение
-
-            # Обновление индикатора прогресса
-            progress_value = int((i + 1) / total_ports * 100)
-            self.update_progress(progress_value)
-        
-        logging.info("Scan completed.")
-
-    def update_progress(self, value):
-        # Обновление прогресса в главном потоке
-        QtCore.QMetaObject.invokeMethod(self.progress, "setValue", QtCore.Qt.QueuedConnection, QtCore.QVariant(value))
-
     def createButtons(self):
         """
             Создание главных кнопок. Все три кнопки работают!!!

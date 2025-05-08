@@ -9,6 +9,7 @@ def main():
     """
     app = QApplication(sys.argv)
     scanner = interface.PortScannerInterFace()
+    scanner.init()
     scanner.show()
     sys.exit(app.exec_())
 
