@@ -82,7 +82,7 @@ def http_post_brute(usernames, passwords, URL, keys, threads, error, verbose, fi
                 print (f'[+] Found valid credentials: {username}:{password}')
                 count += 1
             elif count == int(first):
-                sys.exit()
+                return
             else:
                 print (f'[*] Attempted: {username}:{password}')
     
@@ -90,11 +90,10 @@ def http_post_brute(usernames, passwords, URL, keys, threads, error, verbose, fi
 def http_get_brute(usernames, passwords, URL, keys, threads, error): # Не работает
     for username in usernames:
         for password in passwords:
-            response = requests.get(f"{URL}/?{keys[0]}={username}&{keys[1]}={password}")
-            print (response.text)
+            response = requests.get(f"{URL}?{keys[0]}={username}&{keys[1]}={password}")
             if error not in response.text:
                 print (f'[+] Found valid credentials: {username}:{password}')
-                break
+                return
             else:
                 print (f'[*] Attempted: {username}:{password}')
 
@@ -110,6 +109,3 @@ def start_scan(URL, method, threads, usernames, passwords, verbose, first):
 if __name__ == "__main__":
     URL, method, threads, keys, error, usernames, passwords, verbose, first = init_data()
     start_scan(URL, method, threads, usernames, passwords, verbose, first)
-
-
-# Дописать вербоз мод
